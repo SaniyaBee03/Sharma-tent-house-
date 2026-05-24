@@ -40,6 +40,22 @@ replacement_cost :-	float,	Yes
 
 maintenance_required :-	boolean,	Yes
 
+inventory_mode:- string, Yes
+
+Inventory modes
+
+bulk_inventory
+Examples:
+chairs, plates, glasses
+
+tracked_inventory
+Examples:
+gas burners, pedestal fans
+
+individually_tracked
+Examples:
+LED walls, imported sound systems, bridal sofa sets
+
 This section stores all rentable items owned by Sharma Tent House.
 For example:-
 chairs
@@ -49,7 +65,19 @@ gas burners
 LED walls
 bridal sofa set
 
-C. Event Bookings
+C.Individually Tracked Units
+
+unit_id:- string, Yes
+
+parent_item_id:- string, Yes
+
+display_name:- string, Yes
+
+current_state:- string, Yes
+
+assigned_booking_id:- string, No
+
+D. Event Bookings
 
 booking_id:-	string,	Yes
 
@@ -73,9 +101,29 @@ discount_amount:-	float,	Yes
 
 deposit_received:-	float,	Yes
 
-remaining_balance:-	float,	Yes
+E. Booking Inventory Lines
 
-D. Financial Transactions
+line_id:- string, Yes
+
+booking_id:- string, Yes
+
+item_id:- string, Yes
+
+booked_quantity:- integer, Yes
+
+returned_quantity:- integer, Yes
+
+damaged_quantity:- integer, Yes
+
+missing_quantity:- integer, Yes
+
+daily_rate:- float, Yes
+
+total_days:- integer, Yes
+
+line_total:- float, Yes
+
+F. Financial Transactions
 
 transaction_id:-	string,	Yes
 
@@ -87,7 +135,9 @@ payment_mode:-	string,	Yes
 
 transaction_date:-	string,	Yes
 
-E. Damage and Loss Register
+transaction_type:- string, Yes
+
+G. Damage and Loss Register
 
 report_id:-	string,	Yes
 
