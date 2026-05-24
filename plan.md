@@ -59,6 +59,14 @@ event_name:-	string,	Yes
 
 event_type:-	string,	Yes
 
+event_start_date:-	string,	Yes
+
+event_end_date:-	string,	Yes
+
+delivery_date:-	string,	Yes
+
+pickup_date:-	string,	Yes
+
 venue_location:-	string,	Yes
 
 discount_amount:-	float,	Yes
