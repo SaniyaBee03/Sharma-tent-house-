@@ -153,6 +153,8 @@ estimated_loss:-	float,	Yes
 
 recovery_status:-	string,	Yes
 
+usable_quantity:- integer, Yes
+
 
 #3. How the groupings connect to each other
 
