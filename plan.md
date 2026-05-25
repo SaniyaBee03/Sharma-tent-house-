@@ -34,9 +34,9 @@ item_name :-	string,	Yes
 
 total_quantity :-	integer,	Yes
 
-rental_price_per_day :-	float,	Yes
+rental_price_per_day :-	integer,	Yes
 
-replacement_cost :-	float,	Yes
+replacement_cost :-	integer,	Yes
 
 maintenance_required :-	boolean,	Yes
 
@@ -97,9 +97,11 @@ pickup_date:-	string,	Yes
 
 venue_location:-	string,	Yes
 
-discount_amount:-	float,	Yes
+discount_amount:-	integer,	Yes
 
-deposit_received:-	float,	Yes
+deposit_received:-	integer,	Yes
+
+booking_status:- string, Yes
 
 E. Booking Inventory Lines
 
@@ -117,11 +119,11 @@ damaged_quantity:- integer, Yes
 
 missing_quantity:- integer, Yes
 
-daily_rate:- float, Yes
+daily_rate:- integer, Yes
 
 total_days:- integer, Yes
 
-line_total:- float, Yes
+line_total:- integer, Yes
 
 F. Financial Transactions
 
@@ -129,7 +131,7 @@ transaction_id:-	string,	Yes
 
 booking_id:-	string,	Yes
 
-amount:-	float,	Yes
+amount:-	integer,	Yes
 
 payment_mode:-	string,	Yes
 
@@ -149,7 +151,7 @@ issue_category:-	string,	Yes
 
 quantity:-	integer,	Yes
 
-estimated_loss:-	float,	Yes
+estimated_loss:-	integer,	Yes
 
 recovery_status:-	string,	Yes
 
@@ -175,26 +177,309 @@ All the sections in my system are connected because the tent house business is n
 
 In the file structure i will use smaller json files because it will make the system easier to maintain and make debugging easier if something goes wrong during peak wedding season.
 
-For example:-bookings.json
+For example:- ## customers.json
 
 [
 
- {
+  {
   
-   "booking_id": "STH-BOOK-2026-041",
-   
-   "customer_id": "CUST-AGARWAL-014",
-   
-   "event_name": "Agarwal Wedding",
-   
-   "event_start_date": "2026-12-18",
-   
-   "event_end_date": "2026-12-20",
-   
-   "booking_state": "confirmed"
+    "customer_id": "CUST-014",
+    
+    "full_name": "Rajesh Agarwal",
+    
+    "phone_number": "9876543210",
+    
+    "alternate_contact": "9829034567",
+    
+    "address": "Talwandi, Kota",
+    
+    "trust_level": "high"
+    
+  },
+
+  {
   
+    "customer_id": "CUST-021",
+    
+    "full_name": "Manoj Mehta",
+    
+    "phone_number": "9988776655",
+    
+    "alternate_contact": "",
+    
+    "address": "Mahaveer Nagar, Kota",
+    
+    "trust_level": "medium"
+    
   }
-   
+  
+]
+
+## bookings.json
+
+[
+
+  {
+  
+    "booking_id": "BOOK-2026-041",
+    
+    "customer_id": "CUST-014",
+    
+    "event_name": "Agarwal Wedding",
+    
+    "event_type": "Wedding",
+    
+    "event_start_date": "2026-12-18",
+    
+    "event_end_date": "2026-12-20",
+    
+    "delivery_date": "2026-12-17",
+    
+    "pickup_date": "2026-12-21",
+    
+    "venue_location": "Vigyan Nagar, Kota",
+    
+    "booking_status": "confirmed",
+    
+    "discount_amount": 5000,
+    
+    "deposit_received": 25000
+    
+  }
+  
+]
+
+## inventory.json
+
+[
+
+  {
+  
+    "item_id": "ITEM-CHAIR-001",
+    
+    "item_name": "White Plastic Chair",
+    
+    "inventory_mode": "bulk_inventory",
+    
+    "total_quantity": 500,
+    
+    "rental_price_per_day": 12,
+    
+    "replacement_cost": 450,
+    
+    "maintenance_required": false
+    
+  },
+
+  {
+  
+    "item_id": "ITEM-BURNER-001",
+    
+    "item_name": "Commercial Gas Burner",
+    
+    "inventory_mode": "tracked_inventory",
+    
+    "total_quantity": 6,
+    
+    "rental_price_per_day": 250,
+    
+    "replacement_cost": 1200,
+    
+    "maintenance_required": false
+    
+  },
+
+  {
+  
+    "item_id": "ITEM-LED-001",
+    
+    "item_name": "LED Video Wall",
+    
+    "inventory_mode": "individually_tracked",
+
+    "total_quantity": 2,
+    
+    "rental_price_per_day": 8500,
+    
+    "replacement_cost": 120000,
+
+    "maintenance_required": false
+    
+  }
+  
+]
+
+
+## tracked_units.json
+
+[
+
+  {
+  
+    "unit_id": "LED-UNIT-01",
+    
+    "parent_item_id": "ITEM-LED-001",
+    
+    "display_name": "Outdoor LED Wall Unit 1",
+    
+    "current_state": "reserved",
+    
+    "assigned_booking_id": "BOOK-2026-041"
+    
+  },
+
+  {
+  
+    "unit_id": "LED-UNIT-02",
+    
+    "parent_item_id": "ITEM-LED-001",
+    
+    "display_name": "Outdoor LED Wall Unit 2",
+    
+    "current_state": "available",
+    
+    "assigned_booking_id": ""
+    
+  }
+  
+]
+
+## booking_inventory_lines.json
+
+[
+
+  {
+  
+    "line_id": "LINE-001",
+    
+    "booking_id": "BOOK-2026-041",
+    
+    "item_id": "ITEM-CHAIR-001",
+    
+    "booked_quantity": 200,
+    
+    "returned_quantity": 193,
+    
+    "damaged_quantity": 5,
+    
+    "missing_quantity": 2,
+    
+    "daily_rate": 12,
+    
+    "total_days": 3,
+    
+    "line_total": 7200
+    
+  },
+
+  {
+  
+    "line_id": "LINE-002",
+    
+    "booking_id": "BOOK-2026-041",
+    
+    "item_id": "ITEM-LED-001",
+    
+    "booked_quantity": 1,
+    
+    "returned_quantity": 1,
+    
+    "damaged_quantity": 0,
+    
+    "missing_quantity": 0,
+    
+    "daily_rate": 8500,
+    
+    "total_days": 3,
+    
+    "line_total": 25500
+    
+  }
+  
+]
+
+## transactions.json
+
+[
+
+  {
+  
+    "transaction_id": "TXN-101",
+    
+    "booking_id": "BOOK-2026-041",
+    
+    "amount": 25000,
+    
+    "payment_mode": "cash",
+    
+    "transaction_date": "2026-11-10",
+    
+    "transaction_type": "deposit"
+    
+  },
+
+  {
+  
+    "transaction_id": "TXN-102",
+    
+    "booking_id": "BOOK-2026-041",
+    
+    "amount": 15000,
+    
+    "payment_mode": "upi",
+    
+    "transaction_date": "2026-12-17",
+    
+    "transaction_type": "partial_balance_payment"
+    
+  }
+  
+]
+
+## damages.json
+
+[
+
+  {
+  
+    "report_id": "DMG-001",
+    
+    "booking_id": "BOOK-2026-041",
+    
+    "item_id": "ITEM-CHAIR-001",
+    
+    "issue_category": "damaged",
+    
+    "quantity": 5,
+    
+    "estimated_loss": 2250,
+    
+    "recovery_status": "deducted_from_deposit",
+    
+    "usable_quantity": 3
+    
+  },
+
+  {
+  
+    "report_id": "DMG-002",
+    
+    "booking_id": "BOOK-2026-041",
+    
+    "item_id": "ITEM-CHAIR-001",
+    
+    "issue_category": "missing",
+    
+    "quantity": 2,
+    
+    "estimated_loss": 900,
+    
+    "recovery_status": "customer_charged",
+    
+    "usable_quantity": 0
+    
+  }
+  
 ]
 
 
