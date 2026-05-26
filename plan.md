@@ -482,6 +482,7 @@ For example:- ## customers.json
   
 ]
 
+If the business grows to thousands of bookings yearly, availability checks may become slower because the program would need to read many booking records across different JSON files to calculate overlaps. And Managing updates across files may also become difficult at larger scale.
 
 #5. Operations
 
