@@ -1,4 +1,4 @@
-Phased Development Plan
+## Phased Development Plan
 
 I am dividing this project into 5 phases because building the complete Sharma Tent House system together will be difficult to manage and test. By working phase by phase, I can make sure each part is working properly before moving to the next one.
 
@@ -52,7 +52,7 @@ Tracked Equipment
 
 For special items like LED walls, sound systems and sofa sets, the system should allow separate unit tracking.
 
-#How I Will Test This Phase
+# How I Will Test This Phase
 
 Add customers
 
