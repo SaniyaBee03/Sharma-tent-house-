@@ -6,12 +6,6 @@
         "quantity": 500
     },
     {
-        "id": 2,
-        "name": "chair",
-        "category": "furniture",
-        "quantity": 600
-    },
-    {
         "id": 3,
         "name": "gas burner",
         "category": "kitchen quipment",
