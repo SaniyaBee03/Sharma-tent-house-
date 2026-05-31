@@ -1,319 +1,275 @@
-## Phased Development Plan
+# Phased Development Plan
 
-I am dividing this project into 5 phases because building the complete Sharma Tent House system together will be difficult to manage and test. By working phase by phase, I can make sure each part is working properly before moving to the next one.
+I am dividing this project into 5 phases so that I can build the system step by step instead of trying to build everything at once.
 
-Every phase should:
+My goal is to complete one part of the project, test it properly, and then move to the next phase. This will help me understand the system better and also make
+debugging easier if something goes wrong.
 
-work from the command line,
+The purpose of this phase is to build the smallest working version of the system.
 
-save data in JSON files,
+I want to start with inventory because it is the foundation for bookings, availability checking, and all other operations that will be added in later phases.
 
-keep data after restart,
+Before creating customers, bookings, or payments, I first want to make sure that inventory data can be stored properly and loaded again after restarting the application.
 
-and be fully demoable on its own.
+Each phase should:
 
-## Phase 1 – Customer and Inventory Management
+* solve one main problem,
+* be fully usable from the command line,
+* save data using JSON files,
+* work even after restarting the program,
+* and be independently testable.
 
-Purpose
+---
 
-In the first phase, I will focus on creating the basic structure of the system.
+# Phase 1 – Inventory Storage and Persistence
 
-Before creating bookings or handling availability, I first want to make sure that customer information and inventory information can be stored properly and loaded again after restarting the program.
+## Purpose
 
-Features Included
+In the first phase, I want to build the smallest working version of the project.
 
-Customer Management
+Before creating customers, bookings, or payments, I first want to make sure that inventory data can be stored properly and loaded again after restarting the application.
 
-The user should be able to:
+## Features Included
 
-add customers
-
-view customer details
-
-update customer information
-
-search customers using phone number
-
-The system will store customer information such as name, phone number, address, trust level and booking history.
-
-Inventory Management
+### Inventory Management
 
 The user should be able to:
 
-add inventory items
+* add inventory items
+* view inventory items
+* update inventory quantities
+* search inventory items
 
-view inventory
+Example items:
 
-update inventory details
+* Plastic Chairs
+* Round Tables
+* Pedestal Fans
+* Gas Burners
 
-This phase will support different inventory types such as chairs, tables, gas burners, fans and other rental items.
+### JSON Storage
 
-Tracked Equipment
+The system should:
 
-For special items like LED walls, sound systems and sofa sets, the system should allow separate unit tracking.
+* create JSON files automatically if they do not exist
+* save inventory data
+* load inventory data when the program starts
+* keep data available after restart
 
-# How I Will Test This Phase
+## How I Will Test This Phase
 
-Add customers
+* Add multiple inventory items.
+* Restart the application.
+* Check whether all inventory data is still available.
+* Update item quantities and verify the changes are saved correctly.
 
-Add inventory items
+Phase 1 will be complete when inventory can be managed properly and all data remains available after restarting the program.
 
-Add tracked equipment
+---
 
-Exit the program
+# Phase 2 – Customer Management and Booking Creation
 
-Restart the program
+## Purpose
 
-Verify all information is still available
+After inventory management is working properly, I will add customer records and booking functionality.
 
-Phase 1 will be complete when customer and inventory records are saved correctly and survive program restart.
+This phase focuses on creating customer profiles and storing event bookings.
 
-## Phase 2 – Booking System and Availability Checking
+## Features Included
 
-Purpose
-
-The main goal of this phase is to solve the booking conflict problem mentioned in the project brief.
-
-The system should be able to tell whether inventory is available before accepting a booking.
-
-Features Included
-
-Create Booking
-
-The user should be able to:
-
-select a customer
-
-enter event details
-
-choose event dates
-
-choose delivery and pickup dates
-
-Add Inventory to Booking
-
-A booking can contain multiple items such as:
-
-chairs
-
-tables
-
-gas burners
-
-fans
-
-LED walls
-
-Availability Validation
-
-Before saving a booking, the system should:
-
-check overlapping dates
-
-calculate already reserved inventory
-
-calculate available inventory
-
-reject bookings if enough stock is not available
-
-Tracked Item Validation
-
-The same LED wall or sound system should not be assigned to two bookings at the same time.
-
-# How I Will Test This Phase
-
-Create a booking
-
-Add inventory items
-
-Create another booking on overlapping dates
-
-Verify availability calculations
-
-Verify overbooking is blocked
-
-Phase 2 will be complete when booking and availability checking work correctly.
-
-## Phase 3 – Delivery and Return Tracking
-
-Purpose
-
-After bookings are created, the next important task is tracking where inventory is moving.
-
-This phase focuses on deliveries, pickups and inventory movement.
-
-Features Included
-
-Delivery Tracking
+### Customer Management
 
 The user should be able to:
 
-schedule deliveries
+* add customers
+* view customer details
+* update customer details
+* search customers using their phone number
 
-assign tempos
+### Booking Management
 
-assign workers
+The user should be able to:
 
-Inventory Status Tracking
+* create a booking
+* select a customer
+* enter event details
+* enter booking dates
+* enter delivery and pickup dates
 
-Inventory should move through different states such as:
+### Booking Inventory Lines
 
-available
+A single booking should be able to contain multiple inventory items with different quantities.
 
-reserved
+## How I Will Test This Phase
 
-out for delivery
+* Create multiple customer records.
+* Create bookings for different customers.
+* Add inventory items inside bookings.
+* Restart the application and verify that customer and booking records are still available.
 
-at event
+Phase 2 will be complete when customer records and booking records are working correctly and data is stored properly.
 
-returning
+---
 
-under repair
+# Phase 3 – Availability Checking and Tracked Equipment
 
-Return Tracking
+## Purpose
 
-The system should support:
+The main purpose of this phase is to prevent booking mistakes.
 
-full returns
+The system should check inventory availability before accepting a booking request.
 
-partial returns
+## Features Included
 
-pending returns
+### Availability Validation
 
-Late Returns
+The system should:
 
-The system should identify inventory that has not been returned on time.
+* check overlapping booking dates
+* calculate reserved quantities
+* calculate available quantities
+* reject bookings when inventory is not available
 
-# How I Will Test This Phase
+### Individually Tracked Equipment
 
-Create booking
+Support separate tracking for high-value equipment such as:
 
-Dispatch inventory
+* LED Walls
+* Imported Sound Systems
+* Bridal Sofa Sets
 
-Mark delivery completed
+The same equipment unit should not be assigned to multiple bookings at the same time.
 
-Record partial return
+### Pressure Score
 
-Record complete return
+The system should calculate a pressure score based on:
 
-Phase 3 will be complete when inventory movement can be tracked properly.
+* booking size
+* inventory requirements
+* delivery overlap
 
-## Phase 4 – Payments, Damages and Loss Tracking
+I added pressure score because the story repeatedly describes
+operational overload during peak season.
+This gives the business a way to identify risky days before
+problems happen.
 
-Purpose
+## How I Will Test This Phase
 
-This phase focuses on the money side of the business and handling damaged or missing inventory.
+* Create multiple bookings with overlapping dates.
+* Verify inventory availability calculations.
+* Try creating overbooked requests and confirm they are rejected.
+* Test conflicts for individually tracked equipment.
 
-Features Included
+Phase 3 will be complete when availability calculations and equipment tracking are working correctly.
 
-Payment Tracking
+---
 
-The system should store:
+# Phase 4 – Delivery, Return and Damage Handling
 
-deposits
+## Purpose
 
-balance payments
+This phase focuses on what happens after a booking is confirmed.
 
-refunds
+The system should track inventory movement and monitor the condition of items when they return.
 
-late fees
+## Features Included
 
-Damage Recording
+### Daily Operations Queue
 
-The user should be able to record:
+Track activities such as:
 
-damaged items
+* deliveries
+* pickups
+* emergency replacements
 
-missing items
+### Inventory States
 
-repairable items
+Inventory should move through states such as:
 
-Customer Dues
+* available
+* reserved
+* out for delivery
+* at event
+* returning
+* under repair
 
-The system should calculate:
+### Return Management
 
-amount paid
+Support:
 
-amount pending
+* complete returns
+* partial returns
+* pending returns
 
-deductions for damages
+### Damage and Loss Tracking
 
-final customer balance
+Record:
 
-# How I Will Test This Phase
+* damaged items
+* missing items
+* repairable items
+* unrecoverable items
 
-Record booking payment
+## How I Will Test This Phase
 
-Record additional payment
+* Dispatch inventory for a booking.
+* Record inventory returns.
+* Record damaged items.
+* Record missing items.
+* Verify that inventory states are updated correctly.
 
-Record damaged item
+Phase 4 will be complete when delivery tracking, return handling, and damage tracking work correctly.
 
-Apply deduction
+---
 
-Calculate final amount
+# Phase 5 – Payments, Reports and Final Improvements
 
-Phase 4 will be complete when payment and damage handling work correctly.
+## Purpose
 
-## Phase 5 – Reports, Validation and Final Improvements
+The final phase focuses on payments, reports, validations, and overall improvements.
 
-Purpose
+At this stage, I want the system to feel complete and practical enough for daily use.
 
-The final phase focuses on making the project easier to use and more reliable.
+## Features Included
 
-Instead of adding major features, I will improve the overall quality of the system.
+### Financial Transactions
 
-Features Included
+Track:
 
-Reports
+* deposits
+* balance payments
+* refunds
+* late fees
+* damage deductions
+
+### Reports
 
 Generate reports such as:
 
-active bookings
+* active bookings
+* inventory currently outside the warehouse
+* customer history
+* damage reports
+* idle inventory reports
 
-inventory currently out
+### Validation and Improvements
 
-customer history
+Handle situations such as:
 
-damage reports
+* invalid dates
+* overbooking attempts
+* duplicate records
+* incorrect return quantities
+* missing inventory
 
-idle inventory reports
+I will also try to improve menus, prompts, and error messages to make the system easier to use.
 
-Validation
+## How I Will Test This Phase
 
-Test situations such as:
+* Create complete booking workflows from start to finish.
+* Record different types of payments.
+* Record damages and deductions.
+* Generate reports and verify the results.
+* Test invalid situations and confirm the program handles them properly.
 
-overbooking
-
-invalid dates
-
-duplicate records
-
-incorrect returns
-
-missing inventory
-
-CLI Improvements
-
-Improve menu structure, messages and overall usability.
-
-# How I Will Test This Phase
-
-I should be able to demonstrate the complete flow:
-
-create customer
-
-add inventory
-
-create booking
-
-check availability
-
-dispatch items
-
-record returns
-
-record payments
-
-generate reports
-
-Phase 5 will be complete when the entire system works smoothly and can be demonstrated from start to finish without manual fixes.
+Phase 5 will be complete when the entire Sharma Tent House Management System works smoothly from inventory creation to final payment and reporting.
