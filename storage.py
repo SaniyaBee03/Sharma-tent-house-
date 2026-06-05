@@ -1,11 +1,13 @@
 import json
 
+FILE_NAME = "inventory.json"
 
-def load_data(file_name):
+
+def load_data():
 
     try:
 
-        with open(file_name, "r") as file:
+        with open(FILE_NAME, "r") as file:
 
             data = json.load(file)
 
@@ -22,8 +24,8 @@ def load_data(file_name):
         return []
 
 
-def save_data(file_name, data):
+def save_data(data):
 
-    with open(file_name, "w") as file:
+    with open(FILE_NAME, "w") as file:
 
         json.dump(data, file, indent=4)
