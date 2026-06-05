@@ -9,9 +9,9 @@ def read_positive_int(message):
 
             value = int(input(message))
 
-            if value < 0:
+            if value <= 0:
 
-                print("Quantity cannot be negative")
+                print("Quantity must be greater than 0")
 
             else:
 
@@ -26,11 +26,25 @@ def generate_id(items):
 
     if not items:
 
-        return 1
+        return "ITEM_001"
 
-    max_id = max(item["id"] for item in items)
+    max_id = 0
 
-    return max_id + 1
+    for item in items:
+
+        item_id = item["id"]
+
+        parts = item_id.split("_")
+
+        current_id = int(parts[1])
+
+        if current_id > max_id:
+
+            max_id = current_id
+
+    new_id = max_id + 1
+
+    return "ITEM_" + str(new_id).zfill(3)
 
 
 def add_item():
