@@ -1,23 +1,37 @@
 import json
-import os
+
+
+FILE_NAME = "inventory.json"
+
+
+import json
 
 FILE_NAME = "inventory.json"
 
 
 def load_data():
 
-    if not os.path.exists(FILE_NAME):
+    try:
 
-        with open(FILE_NAME, "w") as file:
-            json.dump([], file)
+        with open(FILE_NAME, "r") as file:
 
-    with open(FILE_NAME, "r") as file:
-        data = json.load(file)
+            data = json.load(file)
 
-    return data
+            return data
+
+    except FileNotFoundError:
+
+        return []
+
+    except json.JSONDecodeError:
+
+        print("Invalid JSON data found")
+
+        return []
 
 
 def save_data(data):
 
     with open(FILE_NAME, "w") as file:
+
         json.dump(data, file, indent=4)
