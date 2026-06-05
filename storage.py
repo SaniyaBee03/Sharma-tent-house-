@@ -1,15 +1,9 @@
 import json
 
-
 FILE_NAME = "inventory.json"
 
 
-import json
-
-FILE_NAME = "inventory.json"
-
-
-def load_data():
+def load_data(file_name):
 
     try:
 
