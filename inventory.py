@@ -11,7 +11,7 @@ def read_positive_int(message):
 
             if value <= 0:
 
-                print("Quantity must be greater than 0")
+                print("Value must be greater than 0")
 
             else:
 
@@ -85,11 +85,14 @@ def add_item():
 
     quantity = read_positive_int("Enter quantity: ")
 
+    rental_price = read_positive_int("Enter rental price per day: ")
+
     item = {
         "id": generate_id(items),
         "name": item_name,
         "category": category,
-        "quantity": quantity
+        "quantity": quantity,
+        "rental_price": rental_price
     }
 
     items.append(item)
@@ -115,6 +118,7 @@ def view_items():
         print("Name:", item["name"])
         print("Category:", item["category"])
         print("Quantity:", item["quantity"])
+        print("Rental Price:", item["rental_price"])
 
 
 def update_item():
@@ -152,7 +156,7 @@ def search_item():
 
     items = load_data()
 
-    search_name = input("Enter item name: ")
+    search_name = input("Enter item name: ").strip()
 
     found = False
 
@@ -164,6 +168,7 @@ def search_item():
             print("Name:", item["name"])
             print("Category:", item["category"])
             print("Quantity:", item["quantity"])
+            print("Rental Price:", item.get("rental_price", 0))
 
             found = True
 
