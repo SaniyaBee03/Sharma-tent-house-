@@ -1,16 +1,78 @@
 from storage import load_data, save_data
 
 
+def read_positive_int(message):
+
+    while True:
+
+        try:
+
+            value = int(input(message))
+
+            if value < 0:
+
+                print("Quantity cannot be negative")
+
+            else:
+
+                return value
+
+        except ValueError:
+
+            print("Please enter a valid number")
+
+
+def generate_id(items):
+
+    if not items:
+
+        return 1
+
+    max_id = max(item["id"] for item in items)
+
+    return max_id + 1
+
+
 def add_item():
 
     items = load_data()
 
-    item_name = input("Enter item name: ")
-    category = input("Enter category: ")
-    quantity = int(input("Enter quantity: "))
+    while True:
+
+        item_name = input("Enter item name: ").strip()
+
+        if item_name == "":
+
+            print("Item name cannot be empty")
+
+        else:
+
+            break
+
+    for item in items:
+
+        if item["name"].lower() == item_name.lower():
+
+            print("Item already exists")
+
+            return
+
+    while True:
+
+        category = input("Enter category: ").strip()
+
+        if category == "":
+
+            print("Category cannot be empty")
+
+        else:
+
+            break
+
+    quantity = read_positive_int("Enter quantity: ")
 
     item = {
-        "id": len(items) + 1,
+        "id": generate_id(items),
         "name": item_name,
         "category": category,
         "quantity": quantity
@@ -27,8 +89,10 @@ def view_items():
 
     items = load_data()
 
-    if len(items) == 0:
+    if not items:
+
         print("No items found")
+
         return
 
     for item in items:
@@ -43,15 +107,15 @@ def update_item():
 
     items = load_data()
 
-    item_id = int(input("Enter item id: "))
+    item_name = input("Enter item name: ")
 
     found = False
 
     for item in items:
 
-        if item["id"] == item_id:
+        if item["name"].lower() == item_name.lower():
 
-            new_quantity = int(input("Enter new quantity: "))
+            new_quantity = read_positive_int("Enter new quantity: ")
 
             item["quantity"] = new_quantity
 
