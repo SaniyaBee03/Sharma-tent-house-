@@ -49,7 +49,7 @@ def generate_id(items):
 
 def add_item():
 
-    items = load_data()
+    items = load_data("inventory.json")
 
     while True:
 
@@ -97,14 +97,14 @@ def add_item():
 
     items.append(item)
 
-    save_data(items)
+    save_data("inventory.json", items)
 
     print("Item added successfully")
 
 
 def view_items():
 
-    items = load_data()
+    items = load_data("inventory.json")
 
     if not items:
 
@@ -118,12 +118,12 @@ def view_items():
         print("Name:", item["name"])
         print("Category:", item["category"])
         print("Quantity:", item["quantity"])
-        print("Rental Price:", item["rental_price"])
+        print("Rental Price:", item.get("rental_price", 0))
 
 
 def update_item():
 
-    items = load_data()
+    items = load_data("inventory.json")
 
     item_name = input("Enter item name: ")
 
@@ -143,7 +143,7 @@ def update_item():
 
     if found:
 
-        save_data(items)
+        save_data("inventory.json", items)
 
         print("Quantity updated")
 
@@ -154,7 +154,7 @@ def update_item():
 
 def search_item():
 
-    items = load_data()
+    items = load_data("inventory.json")
 
     search_name = input("Enter item name: ").strip()
 
