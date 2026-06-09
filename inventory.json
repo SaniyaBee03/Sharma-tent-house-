@@ -1,0 +1,16 @@
+[
+    {
+        "id": "ITEM_001",
+        "name": "chair",
+        "category": "funiture",
+        "quantity": 150,
+        "rental_price": 20
+    },
+    {
+        "id": "ITEM_002",
+        "name": "gas burner",
+        "category": "kitchen quipment",
+        "quantity": 6,
+        "rental_price": 50
+    }
+]
