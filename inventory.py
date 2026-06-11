@@ -85,14 +85,14 @@ def add_item():
 
     quantity = read_positive_int("Enter quantity: ")
 
-    rental_price = read_positive_int("Enter rental price per day: ")
+    rent_per_day = read_positive_int("Enter rent per day: ")
 
     item = {
         "id": generate_id(items),
         "name": item_name,
         "category": category,
         "quantity": quantity,
-        "rental_price": rental_price
+        "rent_per_day": rent_per_day
     }
 
     items.append(item)
@@ -118,7 +118,7 @@ def view_items():
         print("Name:", item["name"])
         print("Category:", item["category"])
         print("Quantity:", item["quantity"])
-        print("Rental Price:", item.get("rental_price", 0))
+        print("Rent Per Day:", item.get("rent_per_day", 0))
 
 
 def update_item():
@@ -168,7 +168,7 @@ def search_item():
             print("Name:", item["name"])
             print("Category:", item["category"])
             print("Quantity:", item["quantity"])
-            print("Rental Price:", item.get("rental_price", 0))
+            print("Rent Per Day:", item.get("rent_per_day", 0))
 
             found = True
 
