@@ -36,7 +36,17 @@ def generate_id(items):
 
         parts = item_id.split("_")
 
-        current_id = int(parts[1])
+        if len(parts) != 2:
+
+            continue
+
+        try:
+
+            current_id = int(parts[1])
+
+        except ValueError:
+
+            continue
 
         if current_id > max_id:
 
@@ -117,7 +127,7 @@ def view_items():
         print("\nID:", item["id"])
         print("Name:", item["name"])
         print("Category:", item["category"])
-        print("Quantity:", item["quantity"])
+        print("Quantity:", item.get("quantity", 0))
         print("Rent Per Day:", item.get("rent_per_day", 0))
 
 
@@ -125,13 +135,25 @@ def update_item():
 
     items = load_data("inventory.json")
 
-    item_name = input("Enter item name: ")
+    item_name = input("Enter item name: ").strip()
 
     found = False
 
+    normalized_name = " ".join(
+
+    item_name.lower().split()
+
+)
+
     for item in items:
 
-        if item["name"].lower() == item_name.lower():
+        existing_name = " ".join(
+
+            item["name"].lower().split()
+
+        )
+
+        if existing_name == normalized_name:
 
             new_quantity = read_positive_int("Enter new quantity: ")
 
@@ -167,11 +189,11 @@ def search_item():
             print("\nID:", item["id"])
             print("Name:", item["name"])
             print("Category:", item["category"])
-            print("Quantity:", item["quantity"])
+            print("Quantity:", item.get("quantity", 0))
             print("Rent Per Day:", item.get("rent_per_day", 0))
 
             found = True
 
-    if found == False:
+    if not found:
 
         print("Item not found")
