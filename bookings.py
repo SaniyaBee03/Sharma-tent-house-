@@ -1,6 +1,6 @@
 from storage import load_data, save_data
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 FILE_NAME = "bookings.json"
 CUSTOMERS_FILE = "customers.json"
@@ -20,7 +20,17 @@ def generate_booking_id(bookings):
 
         parts = booking_id.split("_")
 
-        current_id = int(parts[1])
+        if len(parts) != 2:
+
+            continue
+
+        try:
+
+            current_id = int(parts[1])
+
+        except ValueError:
+
+            continue
 
         if current_id > max_id:
             max_id = current_id
@@ -46,27 +56,85 @@ def read_date(message):
 
             print("Please enter a valid date in DD/MM/YYYY format")
 
+def read_booking_dates():
+
+    while True:
+
+        start_date = read_date(
+            "Enter start date (DD/MM/YYYY): "
+        )
+
+        end_date = read_date(
+            "Enter end date (DD/MM/YYYY): "
+        )
+
+        delivery_date = read_date(
+            "Enter delivery date (DD/MM/YYYY): "
+        )
+
+        pickup_date = read_date(
+            "Enter pickup date (DD/MM/YYYY): "
+        )
+
+        if end_date < start_date:
+
+            print("End date cannot be before start date")
+
+        elif delivery_date > start_date:
+
+            print(
+                "Delivery date must be before or on start date"
+            )
+
+        elif pickup_date < end_date:
+
+            print(
+                "Pickup date must be after or on end date"
+            )
+
+        else:
+
+            return (
+                start_date,
+                end_date,
+                delivery_date,
+                pickup_date
+            )
 
 def dates_overlap(start1, end1, start2, end2):
 
     return start1 <= end2 and start2 <= end1
 
 
-def check_availability(item_id, requested_quantity, start_date, end_date):
+def check_availability(
+    item_id,
+    requested_quantity,
+    start_date,
+    end_date
+):
 
     bookings = load_data(FILE_NAME)
 
     inventory_items = load_data(INVENTORY_FILE)
 
-    total_quantity = 0
+    selected_item = None
 
     for item in inventory_items:
 
         if item["id"] == item_id:
 
-            total_quantity = item["quantity"]
-
+            selected_item = item
             break
+
+    if selected_item is None:
+
+        return False
+
+    total_quantity = selected_item.get("quantity", 0)
+
+    if total_quantity <= 0:
+
+        return False
 
     booked_quantity = 0
 
@@ -162,31 +230,12 @@ def create_booking():
 
             break
 
-    while True:
-
-        start_date = read_date("Enter start date (DD/MM/YYYY): ")
-
-        end_date = read_date("Enter end date (DD/MM/YYYY): ")
-
-        delivery_date = read_date("Enter delivery date (DD/MM/YYYY): ")
-
-        pickup_date = read_date("Enter pickup date (DD/MM/YYYY): ")
-
-        if end_date < start_date:
-
-            print("End date cannot be before start date")
-
-        elif delivery_date > start_date:
-
-            print("Delivery date must be before or on start date")
-
-        elif pickup_date < end_date:
-
-            print("Pickup date must be after or on end date")
-
-        else:
-
-            break
+    (
+    start_date,
+    end_date,
+    delivery_date,
+    pickup_date
+) = read_booking_dates()
 
     rental_days = (end_date - start_date).days + 1
 
@@ -318,7 +367,7 @@ def create_booking():
 
                 break
 
-        except:
+        except InvalidOperation:
 
             print("Enter a valid amount")
 
