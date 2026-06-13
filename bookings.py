@@ -22,6 +22,8 @@ def generate_booking_id(bookings):
 
         if len(parts) != 2:
 
+            print("Warning: Invalid booking ID format: {booking_id}")
+
             continue
 
         try:
@@ -29,6 +31,8 @@ def generate_booking_id(bookings):
             current_id = int(parts[1])
 
         except ValueError:
+
+            print("Warning: Invalid booking ID found: {booking_id}")
 
             continue
 
@@ -130,7 +134,19 @@ def check_availability(
 
         return False
 
-    total_quantity = selected_item.get("quantity", 0)
+    try:
+
+        total_quantity = int(
+
+            selected_item.get("quantity", 0)
+
+        )
+
+    except (ValueError, TypeError):
+    
+     print("Invalid quantity found in inventory data")
+
+     return False
 
     if total_quantity <= 0:
 
@@ -141,12 +157,12 @@ def check_availability(
     for booking in bookings:
 
         booking_start = datetime.strptime(
-            booking["start_date"],
+            booking["delivery_date"],
             "%d/%m/%Y"
         )
 
         booking_end = datetime.strptime(
-            booking["end_date"],
+            booking["pickup_date"],
             "%d/%m/%Y"
         )
 
@@ -291,8 +307,8 @@ def create_booking():
                 if not check_availability(
                     selected_item["id"],
                     quantity,
-                    start_date,
-                    end_date
+                    delivery_date,
+                    pickup_date
                 ):
 
                     print(
