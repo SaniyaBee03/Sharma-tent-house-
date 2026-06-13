@@ -8,5 +8,10 @@
         "id": "CUST_002",
         "name": "Mayank",
         "phone": "7845129685"
+    },
+    {
+        "id": "CUST_003",
+        "name": "Rishita",
+        "phone": "5896457812"
     }
 ]
