@@ -36,7 +36,21 @@ def generate_id(items):
 
         parts = item_id.split("_")
 
-        current_id = int(parts[1])
+        if len(parts) != 2:
+
+            print("Warning: Invalid booking ID format: {booking_id}")
+
+            continue
+
+        try:
+
+            current_id = int(parts[1])
+
+        except ValueError:
+
+            print("Warning: Invalid booking ID found: {booking_id}")
+
+            continue
 
         if current_id > max_id:
 
@@ -49,7 +63,7 @@ def generate_id(items):
 
 def add_item():
 
-    items = load_data()
+    items = load_data("inventory.json")
 
     while True:
 
@@ -85,26 +99,26 @@ def add_item():
 
     quantity = read_positive_int("Enter quantity: ")
 
-    rental_price = read_positive_int("Enter rental price per day: ")
+    rent_per_day = read_positive_int("Enter rent per day: ")
 
     item = {
         "id": generate_id(items),
         "name": item_name,
         "category": category,
         "quantity": quantity,
-        "rental_price": rental_price
+        "rent_per_day": rent_per_day
     }
 
     items.append(item)
 
-    save_data(items)
+    save_data("inventory.json", items)
 
     print("Item added successfully")
 
 
 def view_items():
 
-    items = load_data()
+    items = load_data("inventory.json")
 
     if not items:
 
@@ -117,21 +131,33 @@ def view_items():
         print("\nID:", item["id"])
         print("Name:", item["name"])
         print("Category:", item["category"])
-        print("Quantity:", item["quantity"])
-        print("Rental Price:", item["rental_price"])
+        print("Quantity:", item.get("quantity", 0))
+        print("Rent Per Day:", item.get("rent_per_day", 0))
 
 
 def update_item():
 
-    items = load_data()
+    items = load_data("inventory.json")
 
-    item_name = input("Enter item name: ")
+    item_name = input("Enter item name: ").strip()
 
     found = False
 
+    normalized_name = " ".join(
+
+    item_name.lower().split()
+
+)
+
     for item in items:
 
-        if item["name"].lower() == item_name.lower():
+        existing_name = " ".join(
+
+            item["name"].lower().split()
+
+        )
+
+        if existing_name == normalized_name:
 
             new_quantity = read_positive_int("Enter new quantity: ")
 
@@ -143,7 +169,7 @@ def update_item():
 
     if found:
 
-        save_data(items)
+        save_data("inventory.json", items)
 
         print("Quantity updated")
 
@@ -154,7 +180,7 @@ def update_item():
 
 def search_item():
 
-    items = load_data()
+    items = load_data("inventory.json")
 
     search_name = input("Enter item name: ").strip()
 
@@ -167,11 +193,11 @@ def search_item():
             print("\nID:", item["id"])
             print("Name:", item["name"])
             print("Category:", item["category"])
-            print("Quantity:", item["quantity"])
-            print("Rental Price:", item.get("rental_price", 0))
+            print("Quantity:", item.get("quantity", 0))
+            print("Rent Per Day:", item.get("rent_per_day", 0))
 
             found = True
 
-    if found == False:
+    if not found:
 
         print("Item not found")

@@ -1,0 +1,17 @@
+[
+    {
+        "id": "CUST_001",
+        "name": "Pawan",
+        "phone": "5869471236"
+    },
+    {
+        "id": "CUST_002",
+        "name": "Mayank",
+        "phone": "7845129685"
+    },
+    {
+        "id": "CUST_003",
+        "name": "Rishita",
+        "phone": "5896457812"
+    }
+]
