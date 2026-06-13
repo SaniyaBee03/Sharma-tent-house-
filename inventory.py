@@ -38,6 +38,8 @@ def generate_id(items):
 
         if len(parts) != 2:
 
+            print("Warning: Invalid booking ID format: {booking_id}")
+
             continue
 
         try:
@@ -45,6 +47,8 @@ def generate_id(items):
             current_id = int(parts[1])
 
         except ValueError:
+
+            print("Warning: Invalid booking ID found: {booking_id}")
 
             continue
 
