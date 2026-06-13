@@ -1,64 +1,14 @@
 [
     {
         "id": "BOOK_001",
-        "customer_id": "CUST_002",
-        "customer_name": "Mayank",
-        "event_name": "Wedding",
-        "event_address": "Station Area",
-        "start_date": "15/06/2026",
-        "end_date": "17/06/2026",
-        "delivery_date": "14/06/2026",
-        "pickup_date": "18/06/2026",
-        "rental_days": 3,
-        "items": [
-            {
-                "item_id": "ITEM_001",
-                "item_name": "Chair",
-                "quantity": 100,
-                "rent_per_day": "10",
-                "days": 3,
-                "item_total": "3000"
-            }
-        ],
-        "total_amount": "3000.00",
-        "deposit_amount": "500",
-        "balance_amount": "2500.00"
-    },
-    {
-        "id": "BOOK_ABC",
         "customer_id": "CUST_001",
         "customer_name": "Pawan",
-        "event_name": "Birthday",
-        "event_address": "Mahaveer Nagar",
-        "start_date": "20/06/2026",
-        "end_date": "20/06/2026",
-        "delivery_date": "19/06/2026",
-        "pickup_date": "21/06/2026",
-        "rental_days": 1,
-        "items": [
-            {
-                "item_id": "ITEM_001",
-                "item_name": "Chair",
-                "quantity": 100,
-                "rent_per_day": "10",
-                "days": 1,
-                "item_total": "1000"
-            }
-        ],
-        "total_amount": "1000.00",
-        "deposit_amount": "500",
-        "balance_amount": "500.00"
-    },
-    {
-        "id": "BOOK_002",
-        "customer_id": "CUST_003",
-        "customer_name": "Rishita",
         "event_name": "Wedding",
-        "event_address": "Nayapura",
-        "start_date": "23/06/2026",
-        "end_date": "25/06/2026",
-        "delivery_date": "22/06/2026",
-        "pickup_date": "26/06/2026",
+        "event_address": "Station",
+        "start_date": "07/07/2026",
+        "end_date": "09/07/2026",
+        "delivery_date": "06/07/2026",
+        "pickup_date": "10/07/2026",
         "rental_days": 3,
         "items": [
             {
@@ -68,10 +18,20 @@
                 "rent_per_day": "10",
                 "days": 3,
                 "item_total": "3000"
+            },
+            {
+                "item_id": "ITEM_002",
+                "item_name": "LED WALL",
+                "quantity": 1,
+                "rent_per_day": "1000",
+                "days": 3,
+                "item_total": "3000"
             }
         ],
-        "total_amount": "3000.00",
-        "deposit_amount": "200",
-        "balance_amount": "2800.00"
+        "total_amount": "6000.00",
+        "deposit_amount": "500",
+        "balance_amount": "5500.00",
+        "pressure_score": 121,
+        "pressure_level": "HIGH"
     }
 ]

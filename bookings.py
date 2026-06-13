@@ -5,6 +5,7 @@ from decimal import Decimal, InvalidOperation
 FILE_NAME = "bookings.json"
 CUSTOMERS_FILE = "customers.json"
 INVENTORY_FILE = "inventory.json"
+TRACKED_FILE = "tracked_equipment.json"
 
 
 def generate_booking_id(bookings):
@@ -183,6 +184,133 @@ def check_availability(
 
     return requested_quantity <= available_quantity
 
+def calculate_pressure_score(
+    booking_items,
+    delivery_date,
+    pickup_date
+):
+
+    bookings = load_data(FILE_NAME)
+
+    total_quantity = 0
+
+    for item in booking_items:
+
+        total_quantity += item["quantity"]
+
+    item_count = len(booking_items)
+
+    overlap_count = 0
+
+    for booking in bookings:
+
+        booking_delivery = datetime.strptime(
+            booking["delivery_date"],
+            "%d/%m/%Y"
+        )
+
+        booking_pickup = datetime.strptime(
+            booking["pickup_date"],
+            "%d/%m/%Y"
+        )
+
+        if dates_overlap(
+            delivery_date,
+            pickup_date,
+            booking_delivery,
+            booking_pickup
+        ):
+
+            overlap_count += 1
+
+    pressure_score = (
+        total_quantity +
+        (item_count * 10) +
+        (overlap_count * 20)
+    )
+
+    if pressure_score < 50:
+
+        pressure_level = "LOW"
+
+    elif pressure_score < 100:
+
+        pressure_level = "MEDIUM"
+
+    else:
+
+        pressure_level = "HIGH"
+
+    return pressure_score, pressure_level
+
+def assign_tracked_equipment(
+    item_id,
+    booking_id
+):
+
+    tracked_items = load_data(
+        TRACKED_FILE
+    )
+
+    inventory_items = load_data(
+        INVENTORY_FILE
+    )
+
+    item_name = ""
+
+    for item in inventory_items:
+
+        if item["id"] == item_id:
+
+            item_name = item["name"]
+
+            break
+
+    tracked_items.append({
+        "item_id": item_id,
+        "item_name": item_name,
+        "booking_id": booking_id
+    })
+
+    save_data(
+        TRACKED_FILE,
+        tracked_items
+    )
+
+def is_tracked_equipment_available(
+    item_id,
+    delivery_date,
+    pickup_date
+):
+
+    bookings = load_data(FILE_NAME)
+
+    for booking in bookings:
+
+        booking_delivery = datetime.strptime(
+            booking["delivery_date"],
+            "%d/%m/%Y"
+        )
+
+        booking_pickup = datetime.strptime(
+            booking["pickup_date"],
+            "%d/%m/%Y"
+        )
+
+        if dates_overlap(
+            delivery_date,
+            pickup_date,
+            booking_delivery,
+            booking_pickup
+        ):
+
+            for booked_item in booking.get("items", []):
+
+                if booked_item["item_id"] == item_id:
+
+                    return False
+
+    return True
 
 def create_booking():
 
@@ -292,6 +420,28 @@ def create_booking():
 
             continue
 
+        if selected_item.get("tracked", False):
+
+            if not is_tracked_equipment_available(
+
+                selected_item["id"],
+
+                delivery_date,
+
+                pickup_date
+
+                ):
+
+                print(
+
+                    "Tracked equipment is already assigned "
+
+                    "to another booking"
+
+                )
+
+                continue
+
         while True:
 
             try:
@@ -389,6 +539,14 @@ def create_booking():
 
     balance_amount = total_amount - deposit_amount
 
+    pressure_score, pressure_level = (
+    calculate_pressure_score(
+        booking_items,
+        delivery_date,
+        pickup_date
+    )
+)
+
     booking = {
         "id": generate_booking_id(bookings),
         "customer_id": selected_customer["id"],
@@ -403,10 +561,32 @@ def create_booking():
         "items": booking_items,
         "total_amount": str(total_amount),
         "deposit_amount": str(deposit_amount),
-        "balance_amount": str(balance_amount)
+        "balance_amount": str(balance_amount),
+        "pressure_score": pressure_score,
+        "pressure_level": pressure_level
     }
 
     bookings.append(booking)
+
+    for item in booking_items:
+
+        for inventory_item in inventory_items:
+
+            if (
+
+                inventory_item["id"] == item["item_id"]
+
+                and inventory_item.get("tracked", False)
+
+                ):
+
+                assign_tracked_equipment(
+
+                    item["item_id"],
+
+                    booking["id"]
+
+                )
 
     save_data(FILE_NAME, bookings)
 
@@ -438,8 +618,9 @@ def view_bookings():
         print("Total Amount:", booking.get("total_amount", 0))
         print("Deposit Amount:", booking.get("deposit_amount", 0))
         print("Balance Amount:", booking.get("balance_amount", 0))
-
         print("Items:")
+        print("Pressure Score:",booking.get("pressure_score", 0))
+        print("Pressure Level:",booking.get("pressure_level", "LOW"))
 
         items = booking.get("items", [])
 
@@ -461,3 +642,61 @@ def view_bookings():
                     "| Total:",
                     item.get("item_total", 0)
                 )
+
+def view_tracked_equipment():
+
+    tracked_items = load_data(TRACKED_FILE)
+
+    bookings = load_data(FILE_NAME)
+
+    inventory_items = load_data(INVENTORY_FILE)
+
+    if not tracked_items:
+
+        print("No tracked equipment assignments found")
+
+        return
+
+    for tracked in tracked_items:
+
+        item_name = "Unknown"
+
+        for item in inventory_items:
+
+            if item["id"] == tracked["item_id"]:
+
+                item_name = item["name"]
+
+                break
+
+        for booking in bookings:
+
+            if booking["id"] == tracked["booking_id"]:
+
+                print(
+                    "\nEquipment:",
+                    item_name,
+                    "(" + tracked["item_id"] + ")"
+                )
+
+                print(
+                    "Booking ID:",
+                    booking["id"]
+                )
+
+                print(
+                    "Customer:",
+                    booking["customer_name"]
+                )
+
+                print(
+                    "Delivery:",
+                    booking["delivery_date"]
+                )
+
+                print(
+                    "Pickup:",
+                    booking["pickup_date"]
+                )
+
+                break

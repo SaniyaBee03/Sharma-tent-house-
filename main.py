@@ -15,7 +15,8 @@ while True:
     print("8. Update Customer")
     print("9. Create Booking")
     print("10. View Bookings")
-    print("11. Exit")
+    print("11. View Tracked Equipment")
+    print("12. Exit")
 
     choice = input("Enter your choice: ")
 
@@ -60,6 +61,10 @@ while True:
         bookings.view_bookings()
 
     elif choice == "11":
+
+        bookings.view_tracked_equipment()
+
+    elif choice == "12":
 
         print("Thank You")
         break

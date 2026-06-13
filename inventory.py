@@ -101,12 +101,15 @@ def add_item():
 
     rent_per_day = read_positive_int("Enter rent per day: ")
 
+    tracked = input("Is this tracked equipment? (y/n): ").lower()
+
     item = {
         "id": generate_id(items),
         "name": item_name,
         "category": category,
         "quantity": quantity,
-        "rent_per_day": rent_per_day
+        "rent_per_day": rent_per_day,
+        "tracked": tracked == "y"
     }
 
     items.append(item)
@@ -133,6 +136,7 @@ def view_items():
         print("Category:", item["category"])
         print("Quantity:", item.get("quantity", 0))
         print("Rent Per Day:", item.get("rent_per_day", 0))
+        print("Tracked Equipment:","Yes" if item.get("tracked", False)else "No")
 
 
 def update_item():

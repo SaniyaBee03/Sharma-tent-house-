@@ -4,6 +4,15 @@
         "name": "Chair",
         "category": "Furniture",
         "quantity": 150,
-        "rent_per_day": 10
+        "rent_per_day": 10,
+        "tracked": false
+    },
+    {
+        "id": "ITEM_002",
+        "name": "LED WALL",
+        "category": "Digital Display",
+        "quantity": 2,
+        "rent_per_day": 1000,
+        "tracked": true
     }
 ]
