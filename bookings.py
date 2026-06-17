@@ -7,6 +7,11 @@ CUSTOMERS_FILE = "customers.json"
 INVENTORY_FILE = "inventory.json"
 TRACKED_FILE = "tracked_equipment.json"
 
+ITEM_WEIGHT = 10
+OVERLAP_WEIGHT = 20
+
+LOW_PRESSURE_LIMIT = 50
+MEDIUM_PRESSURE_LIMIT = 100
 
 def generate_booking_id(bookings):
 
@@ -44,6 +49,35 @@ def generate_booking_id(bookings):
 
     return "BOOK_" + str(new_id).zfill(3)
 
+def validate_booking_data(bookings):
+
+    required_fields = [
+        "id",
+        "customer_id",
+        "customer_name",
+        "event_name",
+        "event_address",
+        "start_date",
+        "end_date",
+        "delivery_date",
+        "pickup_date",
+        "items"
+    ]
+
+    for booking in bookings:
+
+        for field in required_fields:
+
+            if field not in booking:
+
+                print(
+                    f"Missing field '{field}' "
+                    f"in booking {booking.get('id', 'Unknown')}"
+                )
+
+                return False
+
+    return True
 
 def read_date(message):
 
@@ -184,6 +218,30 @@ def check_availability(
 
     return requested_quantity <= available_quantity
 
+def validate_booking_items(items):
+
+    required_fields = [
+        "item_id",
+        "quantity",
+        "rent_per_day",
+        "item_total"
+    ]
+
+    for item in items:
+
+        for field in required_fields:
+
+            if field not in item:
+
+                print(
+                    f"Invalid booking item. "
+                    f"Missing field: {field}"
+                )
+
+                return False
+
+    return True
+
 def calculate_pressure_score(
     booking_items,
     delivery_date,
@@ -225,15 +283,15 @@ def calculate_pressure_score(
 
     pressure_score = (
         total_quantity +
-        (item_count * 10) +
-        (overlap_count * 20)
+        (item_count * ITEM_WEIGHT) +
+        (overlap_count * OVERLAP_WEIGHT)
     )
 
-    if pressure_score < 50:
+    if pressure_score < LOW_PRESSURE_LIMIT:
 
         pressure_level = "LOW"
 
-    elif pressure_score < 100:
+    elif pressure_score < MEDIUM_PRESSURE_LIMIT:
 
         pressure_level = "MEDIUM"
 
@@ -245,31 +303,19 @@ def calculate_pressure_score(
 
 def assign_tracked_equipment(
     item_id,
-    booking_id
+    booking_id,
+    assigned_unit
 ):
 
-    tracked_items = load_data(
-        TRACKED_FILE
-    )
-
-    inventory_items = load_data(
-        INVENTORY_FILE
-    )
-
-    item_name = ""
-
-    for item in inventory_items:
-
-        if item["id"] == item_id:
-
-            item_name = item["name"]
-
-            break
+    tracked_items = load_data(TRACKED_FILE)
 
     tracked_items.append({
         "item_id": item_id,
-        "item_name": item_name,
-        "booking_id": booking_id
+        "booking_id": booking_id,
+        "unit_id": assigned_unit,
+        "assigned_at": datetime.now().strftime("%d/%m/%Y %H:%M"),
+        "released_at": None,
+        "status": "ACTIVE"
     })
 
     save_data(
@@ -277,40 +323,80 @@ def assign_tracked_equipment(
         tracked_items
     )
 
-def is_tracked_equipment_available(
+def unassign_tracked_equipment(booking_id):
+
+    tracked_items = load_data(TRACKED_FILE)
+
+    updated_items = []
+
+    for item in tracked_items:
+
+        if item["booking_id"] != booking_id:
+
+            updated_items.append(item)
+
+    save_data(TRACKED_FILE, updated_items)
+
+def get_available_unit(
     item_id,
     delivery_date,
     pickup_date
 ):
 
+    inventory_items = load_data(INVENTORY_FILE)
+
+    tracked_items = load_data(TRACKED_FILE)
+
+    for item in inventory_items:
+
+        if item["id"] == item_id:
+
+            units = item.get("units", [])
+
+            break
+
+    else:
+
+        return None
+
+    used_units = []
+
     bookings = load_data(FILE_NAME)
 
-    for booking in bookings:
+    for tracked in tracked_items:
 
-        booking_delivery = datetime.strptime(
-            booking["delivery_date"],
-            "%d/%m/%Y"
-        )
+        for booking in bookings:
 
-        booking_pickup = datetime.strptime(
-            booking["pickup_date"],
-            "%d/%m/%Y"
-        )
+            if booking["id"] == tracked["booking_id"]:
 
-        if dates_overlap(
-            delivery_date,
-            pickup_date,
-            booking_delivery,
-            booking_pickup
-        ):
+                booking_delivery = datetime.strptime(
+                    booking["delivery_date"],
+                    "%d/%m/%Y"
+                )
 
-            for booked_item in booking.get("items", []):
+                booking_pickup = datetime.strptime(
+                    booking["pickup_date"],
+                    "%d/%m/%Y"
+                )
 
-                if booked_item["item_id"] == item_id:
+                if dates_overlap(
+                    delivery_date,
+                    pickup_date,
+                    booking_delivery,
+                    booking_pickup
+                ):
 
-                    return False
+                    used_units.append(
+                        tracked["unit_id"]
+                    )
 
-    return True
+    for unit in units:
+
+        if unit not in used_units:
+
+            return unit
+
+    return None
 
 def create_booking():
 
@@ -420,9 +506,11 @@ def create_booking():
 
             continue
 
+        assigned_unit = None
+
         if selected_item.get("tracked", False):
 
-            if not is_tracked_equipment_available(
+            assigned_unit = get_available_unit(
 
                 selected_item["id"],
 
@@ -430,15 +518,11 @@ def create_booking():
 
                 pickup_date
 
-                ):
+            )
 
-                print(
+            if assigned_unit is None:
 
-                    "Tracked equipment is already assigned "
-
-                    "to another booking"
-
-                )
+                print("No tracked equipment unit available")
 
                 continue
 
@@ -488,6 +572,7 @@ def create_booking():
             "item_id": selected_item["id"],
             "item_name": selected_item["name"],
             "quantity": quantity,
+            "assigned_unit": assigned_unit,
             "rent_per_day": str(rent_per_day),
             "days": rental_days,
             "item_total": str(item_total)
@@ -502,6 +587,14 @@ def create_booking():
     if not booking_items:
 
         print("At least one item must be added")
+
+        return
+    
+    if not validate_booking_items(
+
+        booking_items
+
+        ):
 
         return
 
@@ -584,7 +677,9 @@ def create_booking():
 
                     item["item_id"],
 
-                    booking["id"]
+                    booking["id"],
+
+                    item.get("assigned_unit")
 
                 )
 
@@ -597,6 +692,18 @@ def view_bookings():
 
     bookings = load_data(FILE_NAME)
 
+    if not validate_booking_data(bookings):
+
+        return
+
+    inventory_items = load_data(INVENTORY_FILE)
+
+    valid_item_ids = []
+
+    for inventory_item in inventory_items:
+
+        valid_item_ids.append(inventory_item["id"])
+
     if not bookings:
 
         print("No bookings found")
@@ -605,6 +712,18 @@ def view_bookings():
 
     for booking in bookings:
 
+        booking_id = booking["id"]
+
+        parts = booking_id.split("_")
+
+        if len(parts) != 2:
+
+            print(f"Warning: Invalid booking ID: {booking_id}")
+
+        elif not parts[1].isdigit():
+
+            print(f"Warning: Invalid booking ID: {booking_id}")
+        
         print("\nBooking ID:", booking["id"])
         print("Customer ID:", booking["customer_id"])
         print("Customer Name:", booking["customer_name"])
@@ -632,6 +751,12 @@ def view_bookings():
 
             for item in items:
 
+                if item["item_id"] not in valid_item_ids:
+
+                    print("- Invalid Item Reference:",item["item_id"])
+
+                    continue
+
                 print(
                     "-",
                     item["item_name"],
@@ -642,6 +767,19 @@ def view_bookings():
                     "| Total:",
                     item.get("item_total", 0)
                 )
+
+                if item.get("assigned_unit"):
+
+                    print("  Assigned Unit:",item["assigned_unit"])
+
+            for inventory_item in inventory_items:
+
+                 if (inventory_item["id"] == item["item_id"]and inventory_item.get("tracked", False)):
+                     
+                     print("  Tracked Equipment: Yes")
+
+                     
+
 
 def view_tracked_equipment():
 
