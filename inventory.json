@@ -1,18 +1,22 @@
 [
     {
         "id": "ITEM_001",
-        "name": "Chair",
-        "category": "Furniture",
-        "quantity": 150,
-        "rent_per_day": 10,
+        "name": "chair",
+        "category": "furniture",
+        "quantity": 100,
+        "rent_per_day": 20,
         "tracked": false
     },
     {
         "id": "ITEM_002",
-        "name": "LED WALL",
-        "category": "Digital Display",
+        "name": "led wall",
+        "category": "digital",
         "quantity": 2,
         "rent_per_day": 1000,
-        "tracked": true
+        "tracked": true,
+        "units": [
+            "LED001",
+            "LED002"
+        ]
     }
 ]
