@@ -1,6 +1,6 @@
 from storage import load_data, save_data
 
-FILE_NAME = "customers.json"
+FILE_NAME = "data/customers.json"
 
 
 def generate_customer_id(customers):

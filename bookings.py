@@ -2,10 +2,10 @@ from storage import load_data, save_data
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
-FILE_NAME = "bookings.json"
-CUSTOMERS_FILE = "customers.json"
-INVENTORY_FILE = "inventory.json"
-TRACKED_FILE = "tracked_equipment.json"
+FILE_NAME = "data/bookings.json"
+CUSTOMERS_FILE = "data/customers.json"
+INVENTORY_FILE = "data/inventory.json"
+TRACKED_FILE = "data/tracked_equipment.json"
 
 ITEM_WEIGHT = 10
 OVERLAP_WEIGHT = 20
@@ -28,7 +28,7 @@ def generate_booking_id(bookings):
 
         if len(parts) != 2:
 
-            print("Warning: Invalid booking ID format: {booking_id}")
+            print(f"Warning: Invalid booking ID format: {booking_id}")
 
             continue
 
@@ -38,7 +38,7 @@ def generate_booking_id(bookings):
 
         except ValueError:
 
-            print("Warning: Invalid booking ID found: {booking_id}")
+            print(f"Warning: Invalid booking ID found: {booking_id}")
 
             continue
 
@@ -115,7 +115,23 @@ def read_booking_dates():
             "Enter pickup date (DD/MM/YYYY): "
         )
 
-        if end_date < start_date:
+        today = datetime.now().replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0
+        )
+
+        if (
+            start_date < today or
+            end_date < today or
+            delivery_date < today or
+            pickup_date < today
+            ):
+
+            print("Booking dates cannot be in the past")
+
+        elif end_date < start_date:
 
             print("End date cannot be before start date")
 
@@ -178,10 +194,10 @@ def check_availability(
         )
 
     except (ValueError, TypeError):
-    
-     print("Invalid quantity found in inventory data")
 
-     return False
+        print("Invalid quantity found in inventory data")
+
+        return False
 
     if total_quantity <= 0:
 
@@ -327,15 +343,32 @@ def unassign_tracked_equipment(booking_id):
 
     tracked_items = load_data(TRACKED_FILE)
 
-    updated_items = []
+    found = False
 
     for item in tracked_items:
 
-        if item["booking_id"] != booking_id:
+        if item["booking_id"] == booking_id:
 
-            updated_items.append(item)
+            item["released_at"] = (
+                datetime.now().strftime("%d/%m/%Y %H:%M")
+            )
 
-    save_data(TRACKED_FILE, updated_items)
+            item["status"] = "RELEASED"
+
+            found = True
+
+    if found:
+
+        save_data(
+            TRACKED_FILE,
+            tracked_items
+        )
+
+        print("Tracked equipment released successfully")
+
+    else:
+
+        print("No tracked equipment found for this booking")
 
 def get_available_unit(
     item_id,
@@ -364,6 +397,10 @@ def get_available_unit(
     bookings = load_data(FILE_NAME)
 
     for tracked in tracked_items:
+
+        if tracked.get("status") != "ACTIVE":
+
+            continue
 
         for booking in bookings:
 
@@ -578,11 +615,19 @@ def create_booking():
             "item_total": str(item_total)
         })
 
-        choice = input("Add another item? (y/n): ").lower()
+        while True:
 
-        if choice != "y":
+            choice = input("Add another item? (y/n): ").strip().lower()
 
-            break
+            if choice in ["y", "n"]:
+
+                break
+
+            print("Please enter only y or n")
+
+        if choice == "n":
+
+                break
 
     if not booking_items:
 
@@ -654,9 +699,7 @@ def create_booking():
         "items": booking_items,
         "total_amount": str(total_amount),
         "deposit_amount": str(deposit_amount),
-        "balance_amount": str(balance_amount),
-        "pressure_score": pressure_score,
-        "pressure_level": pressure_level
+        "pressure_score": pressure_score
     }
 
     bookings.append(booking)
@@ -718,11 +761,11 @@ def view_bookings():
 
         if len(parts) != 2:
 
-            print(f"Warning: Invalid booking ID: {booking_id}")
+            print(f"Warning: Invalid booking ID format: {booking_id}")
 
         elif not parts[1].isdigit():
 
-            print(f"Warning: Invalid booking ID: {booking_id}")
+            print(f"Warning: Invalid booking ID found: {booking_id}")
         
         print("\nBooking ID:", booking["id"])
         print("Customer ID:", booking["customer_id"])
@@ -736,10 +779,20 @@ def view_bookings():
         print("Rental Days:", booking.get("rental_days", 0))
         print("Total Amount:", booking.get("total_amount", 0))
         print("Deposit Amount:", booking.get("deposit_amount", 0))
-        print("Balance Amount:", booking.get("balance_amount", 0))
+        balance_amount = (
+            Decimal(booking["total_amount"]) -
+            Decimal(booking["deposit_amount"]))
+        print("Balance Amount:", balance_amount)
         print("Items:")
-        print("Pressure Score:",booking.get("pressure_score", 0))
-        print("Pressure Level:",booking.get("pressure_level", "LOW"))
+        pressure_score = booking.get("pressure_score", 0)
+        if pressure_score < 50:
+            pressure_level = "LOW"
+        elif pressure_score < 100:
+            pressure_level = "MEDIUM"
+        else:
+            pressure_level = "HIGH"
+        print("Pressure Score:", pressure_score)
+        print("Pressure Level:", pressure_level)
 
         items = booking.get("items", [])
 
@@ -768,18 +821,20 @@ def view_bookings():
                     item.get("item_total", 0)
                 )
 
-                if item.get("assigned_unit"):
+                for inventory_item in inventory_items:
 
-                    print("  Assigned Unit:",item["assigned_unit"])
+                    if (inventory_item["id"] == item["item_id"]and inventory_item.get("tracked", False)):
 
-            for inventory_item in inventory_items:
+                        print("  Tracked Equipment: Yes")
 
-                 if (inventory_item["id"] == item["item_id"]and inventory_item.get("tracked", False)):
-                     
-                     print("  Tracked Equipment: Yes")
+                        if item.get("assigned_unit"):
 
-                     
+                            print(
+                                "  Assigned Unit:",
+                                item["assigned_unit"]
+                            )
 
+                        break
 
 def view_tracked_equipment():
 
@@ -835,6 +890,21 @@ def view_tracked_equipment():
                 print(
                     "Pickup:",
                     booking["pickup_date"]
+                )
+
+                print(
+                    "Status:",
+                    tracked.get("status", "ACTIVE")
+                )
+
+                print(
+                    "Assigned At:",
+                    tracked.get("assigned_at", "N/A")
+                )
+
+                print(
+                    "Released At:",
+                    tracked.get("released_at", "N/A")
                 )
 
                 break
