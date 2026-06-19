@@ -112,7 +112,7 @@ def validate_inventory_data(items):
 
 def add_item():
 
-    items = load_data("inventory.json")
+    items = load_data("data/inventory.json")
 
     while True:
 
@@ -189,14 +189,14 @@ def add_item():
 
     items.append(item)
 
-    save_data("inventory.json", items)
+    save_data("data/inventory.json", items)
 
     print("Item added successfully")
 
 
 def view_items():
 
-    items = load_data("inventory.json")
+    items = load_data("data/inventory.json")
 
     if not validate_inventory_data(items):
 
@@ -219,26 +219,31 @@ def view_items():
         print("Rent Per Day:", item.get("rent_per_day", 0))
         print("Tracked Equipment:","Yes" if item.get("tracked", False)else "No")
 
-    if item.get("tracked", False):
+        if item.get("tracked", False):
+            tracked_items = load_data(
+                "data/tracked_equipment.json"
+            )
 
-        tracked_items = load_data("tracked_equipment.json")
+            assigned = False
 
-        assigned = False
+            for tracked in tracked_items:
 
-        for tracked in tracked_items:
+                if (
+                    tracked["item_id"] == item["id"]
+                    and tracked.get("status") == "ACTIVE"
+                ):
+                    
+                    assigned = True
+                    break
 
-            if tracked["item_id"] == item["id"]:
-
-                assigned = True
-
-                break
-
-            print("Assignment Status:","Assigned" if assigned else "Available")
-
+            print(
+                "Assignment Status:",
+                "Assigned" if assigned else "Available"
+            )
 
 def update_item():
 
-    items = load_data("inventory.json")
+    items = load_data("data/inventory.json")
 
     if not validate_inventory_data(items):
 
@@ -272,7 +277,7 @@ def update_item():
 
                 from storage import load_data
 
-                tracked_items = load_data("tracked_equipment.json")
+                tracked_items = load_data("data/tracked_equipment.json")
 
                 assigned_units = 0
 
@@ -296,7 +301,7 @@ def update_item():
 
     if found:
 
-        save_data("inventory.json", items)
+        save_data("data/inventory.json", items)
 
         print("Quantity updated")
 
@@ -307,7 +312,7 @@ def update_item():
 
 def search_item():
 
-    items = load_data("inventory.json")
+    items = load_data("data/inventory.json")
 
     if not validate_inventory_data(items):
 
