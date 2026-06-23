@@ -30,59 +30,140 @@ def generate_customer_id(customers):
 
 def add_customer():
 
-    customers = load_data(FILE_NAME)
-
     while True:
 
-        customer_name = input("Enter customer name: ").strip()
+        customers = load_data(FILE_NAME)
 
-        if customer_name == "":
+        while True:
 
-            print("Customer name cannot be empty")
+            customer_name = input(
+                "Enter customer name: "
+            ).strip()
 
-        else:
+            if customer_name == "":
 
-            break
+                print(
+                    "Customer name cannot be empty"
+                )
 
-    while True:
+            else:
 
-        phone = input("Enter phone number: ").strip()
+                break
 
-        if phone == "":
+        while True:
 
-            print("Phone number cannot be empty")
+            phone = input(
+                "Enter phone number: "
+            ).strip()
 
-        elif len(phone) != 10:
+            if phone == "":
 
-            print("Mobile number must be exactly 10 digits")
+                print(
+                    "Phone number cannot be empty"
+                )
 
-        elif not phone.isdigit():
+            elif len(phone) != 10:
 
-            print("Mobile number should contain only numbers")
+                print(
+                    "Mobile number must be exactly 10 digits"
+                )
 
-        else:
+            elif not phone.isdigit():
 
-            break
+                print(
+                    "Mobile number should contain only numbers"
+                )
 
-    for customer in customers:
+            else:
 
-        if customer["phone"] == phone:
+                break
 
-            print("Customer with this phone number already exists")
+        duplicate_found = False
 
-            return
+        for customer in customers:
 
-    customer = {
-        "id": generate_customer_id(customers),
-        "name": customer_name,
-        "phone": phone
-    }
+            if customer["phone"] == phone:
 
-    customers.append(customer)
+                print(
+                    "Customer with this phone number already exists"
+                )
 
-    save_data(FILE_NAME, customers)
+                duplicate_found = True
 
-    print("Customer added successfully")
+                break
+
+        if duplicate_found:
+
+            continue
+
+        while True:
+
+            address = input(
+                "Enter address: "
+            ).strip()
+
+            if address == "":
+
+                print(
+                    "Address cannot be empty"
+                )
+
+            elif not any(
+                character.isalpha()
+                for character in address
+            ):
+
+                print(
+                    "Address must contain location details"
+                )
+
+            else:
+
+                break
+
+        customer = {
+
+            "id": generate_customer_id(
+                customers
+            ),
+
+            "name": customer_name,
+
+            "phone": phone,
+
+            "address": address
+        }
+
+        customers.append(customer)
+
+        save_data(
+            FILE_NAME,
+            customers
+        )
+
+        print(
+            "Customer added successfully"
+        )
+
+        while True:
+
+            another = input(
+                "\nAdd another customer? (y/n): "
+            ).strip().lower()
+
+            if another == "y":
+
+                break
+
+            elif another == "n":
+
+                return
+
+            else:
+
+                print(
+                    "Please enter only y or n"
+                )
 
 
 def view_customers():
@@ -100,99 +181,257 @@ def view_customers():
         print("\nID:", customer["id"])
         print("Name:", customer["name"])
         print("Phone:", customer["phone"])
+        print("Address:", customer.get("address", "Not Available"))
 
 
 def search_customer():
 
-    customers = load_data(FILE_NAME)
+    while True:
 
-    search_name = input("Enter customer name: ").strip()
+        customers = load_data(FILE_NAME)
 
-    found = False
+        search_name = input(
+            "Enter customer name: "
+        ).strip()
 
-    for customer in customers:
+        found = False
 
-        if search_name.lower() in customer["name"].lower():
+        for customer in customers:
 
-            print("\nID:", customer["id"])
-            print("Name:", customer["name"])
-            print("Phone:", customer["phone"])
+            if (
+                search_name.lower()
+                in customer["name"].lower()
+            ):
 
-            found = True
+                print(
+                    "\nID:",
+                    customer["id"]
+                )
 
-    if found == False:
+                print(
+                    "Name:",
+                    customer["name"]
+                )
 
-        print("Customer not found")
+                print(
+                    "Phone:",
+                    customer["phone"]
+                )
+
+                print(
+                    "Address:",
+                    customer.get(
+                        "address",
+                        "Not Available"
+                    )
+                )
+
+                found = True
+
+        if not found:
+
+            print(
+                "Customer not found"
+            )
+
+        while True:
+
+            another = input(
+                "\nSearch another customer? (y/n): "
+            ).strip().lower()
+
+            if another == "y":
+
+                break
+
+            elif another == "n":
+
+                return
+
+            else:
+
+                print(
+                    "Please enter only y or n"
+                )
 
 
 def update_customer():
 
-    customers = load_data(FILE_NAME)
+    while True:
 
-    search_name = input("Enter customer name: ").strip()
+        customers = load_data(FILE_NAME)
 
-    found = False
+        search_name = input(
+            "Enter customer name: "
+        ).strip()
 
-    for customer in customers:
+        found = False
 
-        if search_name.lower() in customer["name"].lower():
+        for customer in customers:
 
-            print("\nCurrent Details")
-            print("ID:", customer["id"])
-            print("Name:", customer["name"])
-            print("Phone:", customer["phone"])
+            if (
+                search_name.lower()
+                in customer["name"].lower()
+            ):
 
-            while True:
+                print(
+                    "\nCurrent Details"
+                )
 
-                new_name = input("Enter new customer name: ").strip()
+                print(
+                    "ID:",
+                    customer["id"]
+                )
 
-                if new_name == "":
+                print(
+                    "Name:",
+                    customer["name"]
+                )
 
-                    print("Customer name cannot be empty")
+                print(
+                    "Phone:",
+                    customer["phone"]
+                )
 
-                else:
+                print(
+                    "Address:",
+                    customer.get(
+                        "address",
+                        "Not Available"
+                    )
+                )
 
-                    break
+                while True:
 
-            while True:
+                    new_name = input(
+                        "Enter new customer name: "
+                    ).strip()
 
-                new_phone = input("Enter new phone number: ").strip()
+                    if new_name == "":
 
-                if new_phone == "":
+                        print(
+                            "Customer name cannot be empty"
+                        )
 
-                    print("Phone number cannot be empty")
+                    else:
 
-                elif len(new_phone) != 10:
+                        break
 
-                    print("Mobile number must be exactly 10 digits")
+                while True:
 
-                elif not new_phone.isdigit():
+                    new_phone = input(
+                        "Enter new phone number: "
+                    ).strip()
 
-                    print("Mobile number should contain only numbers")
+                    if new_phone == "":
 
-                else:
+                        print(
+                            "Phone number cannot be empty"
+                        )
 
-                    break
+                    elif len(new_phone) != 10:
 
-            for other_customer in customers:
+                        print(
+                            "Mobile number must be exactly 10 digits"
+                        )
 
-                if other_customer["phone"] == new_phone and other_customer["id"] != customer["id"]:
+                    elif not new_phone.isdigit():
 
-                    print("Customer with this phone number already exists")
+                        print(
+                            "Mobile number should contain only numbers"
+                        )
+
+                    else:
+
+                        break
+
+                duplicate_found = False
+
+                for other_customer in customers:
+
+                    if (
+                        other_customer["phone"]
+                        == new_phone
+                        and other_customer["id"]
+                        != customer["id"]
+                    ):
+
+                        print(
+                            "Customer with this phone number already exists"
+                        )
+
+                        duplicate_found = True
+
+                        break
+
+                if duplicate_found:
 
                     return
 
-            customer["name"] = new_name
-            customer["phone"] = new_phone
+                while True:
 
-            save_data(FILE_NAME, customers)
+                    new_address = input(
+                        "Enter new address: "
+                    ).strip()
 
-            print("Customer updated successfully")
+                    if new_address == "":
 
-            found = True
+                        print(
+                            "Address cannot be empty"
+                        )
 
-            break
+                    elif not any(
+                        character.isalpha()
+                        for character in new_address
+                    ):
 
-    if found == False:
+                        print(
+                            "Address must contain location details"
+                        )
 
-        print("Customer not found")
+                    else:
+
+                        break
+
+                customer["name"] = new_name
+                customer["phone"] = new_phone
+                customer["address"] = new_address
+
+                save_data(
+                    FILE_NAME,
+                    customers
+                )
+
+                print(
+                    "Customer updated successfully"
+                )
+
+                found = True
+
+                break
+
+        if not found:
+
+            print(
+                "Customer not found"
+            )
+
+        while True:
+
+            another = input(
+                "\nUpdate another customer? (y/n): "
+            ).strip().lower()
+
+            if another == "y":
+
+                break
+
+            elif another == "n":
+
+                return
+
+            else:
+
+                print(
+                    "Please enter only y or n"
+                )
