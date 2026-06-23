@@ -2,10 +2,16 @@ from storage import load_data, save_data
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
-FILE_NAME = "bookings.json"
-CUSTOMERS_FILE = "customers.json"
-INVENTORY_FILE = "inventory.json"
+FILE_NAME = "data/bookings.json"
+CUSTOMERS_FILE = "data/customers.json"
+INVENTORY_FILE = "data/inventory.json"
+TRACKED_FILE = "data/tracked_equipment.json"
 
+ITEM_WEIGHT = 10
+OVERLAP_WEIGHT = 20
+
+LOW_PRESSURE_LIMIT = 50
+MEDIUM_PRESSURE_LIMIT = 100
 
 def generate_booking_id(bookings):
 
@@ -22,7 +28,7 @@ def generate_booking_id(bookings):
 
         if len(parts) != 2:
 
-            print("Warning: Invalid booking ID format: {booking_id}")
+            print(f"Warning: Invalid booking ID format: {booking_id}")
 
             continue
 
@@ -32,7 +38,7 @@ def generate_booking_id(bookings):
 
         except ValueError:
 
-            print("Warning: Invalid booking ID found: {booking_id}")
+            print(f"Warning: Invalid booking ID found: {booking_id}")
 
             continue
 
@@ -43,6 +49,35 @@ def generate_booking_id(bookings):
 
     return "BOOK_" + str(new_id).zfill(3)
 
+def validate_booking_data(bookings):
+
+    required_fields = [
+        "id",
+        "customer_id",
+        "customer_name",
+        "event_name",
+        "event_address",
+        "start_date",
+        "end_date",
+        "delivery_date",
+        "pickup_date",
+        "items"
+    ]
+
+    for booking in bookings:
+
+        for field in required_fields:
+
+            if field not in booking:
+
+                print(
+                    f"Missing field '{field}' "
+                    f"in booking {booking.get('id', 'Unknown')}"
+                )
+
+                return False
+
+    return True
 
 def read_date(message):
 
@@ -80,7 +115,23 @@ def read_booking_dates():
             "Enter pickup date (DD/MM/YYYY): "
         )
 
-        if end_date < start_date:
+        today = datetime.now().replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0
+        )
+
+        if (
+            start_date < today or
+            end_date < today or
+            delivery_date < today or
+            pickup_date < today
+            ):
+
+            print("Booking dates cannot be in the past")
+
+        elif end_date < start_date:
 
             print("End date cannot be before start date")
 
@@ -143,10 +194,10 @@ def check_availability(
         )
 
     except (ValueError, TypeError):
-    
-     print("Invalid quantity found in inventory data")
 
-     return False
+        print("Invalid quantity found in inventory data")
+
+        return False
 
     if total_quantity <= 0:
 
@@ -183,6 +234,206 @@ def check_availability(
 
     return requested_quantity <= available_quantity
 
+def validate_booking_items(items):
+
+    required_fields = [
+        "item_id",
+        "quantity",
+        "rent_per_day",
+        "item_total"
+    ]
+
+    for item in items:
+
+        for field in required_fields:
+
+            if field not in item:
+
+                print(
+                    f"Invalid booking item. "
+                    f"Missing field: {field}"
+                )
+
+                return False
+
+    return True
+
+def calculate_pressure_score(
+    booking_items,
+    delivery_date,
+    pickup_date
+):
+
+    bookings = load_data(FILE_NAME)
+
+    total_quantity = 0
+
+    for item in booking_items:
+
+        total_quantity += item["quantity"]
+
+    item_count = len(booking_items)
+
+    overlap_count = 0
+
+    for booking in bookings:
+
+        booking_delivery = datetime.strptime(
+            booking["delivery_date"],
+            "%d/%m/%Y"
+        )
+
+        booking_pickup = datetime.strptime(
+            booking["pickup_date"],
+            "%d/%m/%Y"
+        )
+
+        if dates_overlap(
+            delivery_date,
+            pickup_date,
+            booking_delivery,
+            booking_pickup
+        ):
+
+            overlap_count += 1
+
+    pressure_score = (
+        total_quantity +
+        (item_count * ITEM_WEIGHT) +
+        (overlap_count * OVERLAP_WEIGHT)
+    )
+
+    if pressure_score < LOW_PRESSURE_LIMIT:
+
+        pressure_level = "LOW"
+
+    elif pressure_score < MEDIUM_PRESSURE_LIMIT:
+
+        pressure_level = "MEDIUM"
+
+    else:
+
+        pressure_level = "HIGH"
+
+    return pressure_score, pressure_level
+
+def assign_tracked_equipment(
+    item_id,
+    booking_id,
+    assigned_unit
+):
+
+    tracked_items = load_data(TRACKED_FILE)
+
+    tracked_items.append({
+        "item_id": item_id,
+        "booking_id": booking_id,
+        "unit_id": assigned_unit,
+        "assigned_at": datetime.now().strftime("%d/%m/%Y %H:%M"),
+        "released_at": None,
+        "status": "ACTIVE"
+    })
+
+    save_data(
+        TRACKED_FILE,
+        tracked_items
+    )
+
+def unassign_tracked_equipment(booking_id):
+
+    tracked_items = load_data(TRACKED_FILE)
+
+    found = False
+
+    for item in tracked_items:
+
+        if item["booking_id"] == booking_id:
+
+            item["released_at"] = (
+                datetime.now().strftime("%d/%m/%Y %H:%M")
+            )
+
+            item["status"] = "RELEASED"
+
+            found = True
+
+    if found:
+
+        save_data(
+            TRACKED_FILE,
+            tracked_items
+        )
+
+        print("Tracked equipment released successfully")
+
+    else:
+
+        print("No tracked equipment found for this booking")
+
+def get_available_unit(
+    item_id,
+    delivery_date,
+    pickup_date
+):
+
+    inventory_items = load_data(INVENTORY_FILE)
+
+    tracked_items = load_data(TRACKED_FILE)
+
+    for item in inventory_items:
+
+        if item["id"] == item_id:
+
+            units = item.get("units", [])
+
+            break
+
+    else:
+
+        return None
+
+    used_units = []
+
+    bookings = load_data(FILE_NAME)
+
+    for tracked in tracked_items:
+
+        if tracked.get("status") != "ACTIVE":
+
+            continue
+
+        for booking in bookings:
+
+            if booking["id"] == tracked["booking_id"]:
+
+                booking_delivery = datetime.strptime(
+                    booking["delivery_date"],
+                    "%d/%m/%Y"
+                )
+
+                booking_pickup = datetime.strptime(
+                    booking["pickup_date"],
+                    "%d/%m/%Y"
+                )
+
+                if dates_overlap(
+                    delivery_date,
+                    pickup_date,
+                    booking_delivery,
+                    booking_pickup
+                ):
+
+                    used_units.append(
+                        tracked["unit_id"]
+                    )
+
+    for unit in units:
+
+        if unit not in used_units:
+
+            return unit
+
+    return None
 
 def create_booking():
 
@@ -292,6 +543,26 @@ def create_booking():
 
             continue
 
+        assigned_unit = None
+
+        if selected_item.get("tracked", False):
+
+            assigned_unit = get_available_unit(
+
+                selected_item["id"],
+
+                delivery_date,
+
+                pickup_date
+
+            )
+
+            if assigned_unit is None:
+
+                print("No tracked equipment unit available")
+
+                continue
+
         while True:
 
             try:
@@ -338,20 +609,37 @@ def create_booking():
             "item_id": selected_item["id"],
             "item_name": selected_item["name"],
             "quantity": quantity,
+            "assigned_unit": assigned_unit,
             "rent_per_day": str(rent_per_day),
             "days": rental_days,
             "item_total": str(item_total)
         })
 
-        choice = input("Add another item? (y/n): ").lower()
+        while True:
 
-        if choice != "y":
+            choice = input("Add another item? (y/n): ").strip().lower()
 
-            break
+            if choice in ["y", "n"]:
+
+                break
+
+            print("Please enter only y or n")
+
+        if choice == "n":
+
+                break
 
     if not booking_items:
 
         print("At least one item must be added")
+
+        return
+    
+    if not validate_booking_items(
+
+        booking_items
+
+        ):
 
         return
 
@@ -389,6 +677,14 @@ def create_booking():
 
     balance_amount = total_amount - deposit_amount
 
+    pressure_score, pressure_level = (
+    calculate_pressure_score(
+        booking_items,
+        delivery_date,
+        pickup_date
+    )
+)
+
     booking = {
         "id": generate_booking_id(bookings),
         "customer_id": selected_customer["id"],
@@ -403,10 +699,32 @@ def create_booking():
         "items": booking_items,
         "total_amount": str(total_amount),
         "deposit_amount": str(deposit_amount),
-        "balance_amount": str(balance_amount)
+        "pressure_score": pressure_score
     }
 
     bookings.append(booking)
+
+    for item in booking_items:
+
+        for inventory_item in inventory_items:
+
+            if (
+
+                inventory_item["id"] == item["item_id"]
+
+                and inventory_item.get("tracked", False)
+
+                ):
+
+                assign_tracked_equipment(
+
+                    item["item_id"],
+
+                    booking["id"],
+
+                    item.get("assigned_unit")
+
+                )
 
     save_data(FILE_NAME, bookings)
 
@@ -417,6 +735,18 @@ def view_bookings():
 
     bookings = load_data(FILE_NAME)
 
+    if not validate_booking_data(bookings):
+
+        return
+
+    inventory_items = load_data(INVENTORY_FILE)
+
+    valid_item_ids = []
+
+    for inventory_item in inventory_items:
+
+        valid_item_ids.append(inventory_item["id"])
+
     if not bookings:
 
         print("No bookings found")
@@ -425,6 +755,18 @@ def view_bookings():
 
     for booking in bookings:
 
+        booking_id = booking["id"]
+
+        parts = booking_id.split("_")
+
+        if len(parts) != 2:
+
+            print(f"Warning: Invalid booking ID format: {booking_id}")
+
+        elif not parts[1].isdigit():
+
+            print(f"Warning: Invalid booking ID found: {booking_id}")
+        
         print("\nBooking ID:", booking["id"])
         print("Customer ID:", booking["customer_id"])
         print("Customer Name:", booking["customer_name"])
@@ -437,9 +779,20 @@ def view_bookings():
         print("Rental Days:", booking.get("rental_days", 0))
         print("Total Amount:", booking.get("total_amount", 0))
         print("Deposit Amount:", booking.get("deposit_amount", 0))
-        print("Balance Amount:", booking.get("balance_amount", 0))
-
+        balance_amount = (
+            Decimal(booking["total_amount"]) -
+            Decimal(booking["deposit_amount"]))
+        print("Balance Amount:", balance_amount)
         print("Items:")
+        pressure_score = booking.get("pressure_score", 0)
+        if pressure_score < 50:
+            pressure_level = "LOW"
+        elif pressure_score < 100:
+            pressure_level = "MEDIUM"
+        else:
+            pressure_level = "HIGH"
+        print("Pressure Score:", pressure_score)
+        print("Pressure Level:", pressure_level)
 
         items = booking.get("items", [])
 
@@ -451,6 +804,12 @@ def view_bookings():
 
             for item in items:
 
+                if item["item_id"] not in valid_item_ids:
+
+                    print("- Invalid Item Reference:",item["item_id"])
+
+                    continue
+
                 print(
                     "-",
                     item["item_name"],
@@ -461,3 +820,91 @@ def view_bookings():
                     "| Total:",
                     item.get("item_total", 0)
                 )
+
+                for inventory_item in inventory_items:
+
+                    if (inventory_item["id"] == item["item_id"]and inventory_item.get("tracked", False)):
+
+                        print("  Tracked Equipment: Yes")
+
+                        if item.get("assigned_unit"):
+
+                            print(
+                                "  Assigned Unit:",
+                                item["assigned_unit"]
+                            )
+
+                        break
+
+def view_tracked_equipment():
+
+    tracked_items = load_data(TRACKED_FILE)
+
+    bookings = load_data(FILE_NAME)
+
+    inventory_items = load_data(INVENTORY_FILE)
+
+    if not tracked_items:
+
+        print("No tracked equipment assignments found")
+
+        return
+
+    for tracked in tracked_items:
+
+        item_name = "Unknown"
+
+        for item in inventory_items:
+
+            if item["id"] == tracked["item_id"]:
+
+                item_name = item["name"]
+
+                break
+
+        for booking in bookings:
+
+            if booking["id"] == tracked["booking_id"]:
+
+                print(
+                    "\nEquipment:",
+                    item_name,
+                    "(" + tracked["item_id"] + ")"
+                )
+
+                print(
+                    "Booking ID:",
+                    booking["id"]
+                )
+
+                print(
+                    "Customer:",
+                    booking["customer_name"]
+                )
+
+                print(
+                    "Delivery:",
+                    booking["delivery_date"]
+                )
+
+                print(
+                    "Pickup:",
+                    booking["pickup_date"]
+                )
+
+                print(
+                    "Status:",
+                    tracked.get("status", "ACTIVE")
+                )
+
+                print(
+                    "Assigned At:",
+                    tracked.get("assigned_at", "N/A")
+                )
+
+                print(
+                    "Released At:",
+                    tracked.get("released_at", "N/A")
+                )
+
+                break

@@ -1,9 +1,1 @@
-[
-    {
-        "id": "ITEM_001",
-        "name": "Chair",
-        "category": "Furniture",
-        "quantity": 150,
-        "rent_per_day": 10
-    }
-]
+[]
