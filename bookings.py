@@ -97,48 +97,83 @@ def read_date(message):
 
 def read_booking_dates():
 
+    today = datetime.now().replace(
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0
+    )
+
     while True:
 
         start_date = read_date(
             "Enter start date (DD/MM/YYYY): "
         )
 
+        if start_date < today:
+
+            print(
+                "Start date cannot be in the past"
+            )
+
+        else:
+
+            break
+
+    while True:
+
         end_date = read_date(
             "Enter end date (DD/MM/YYYY): "
         )
+
+        if end_date < today:
+
+            print(
+                "End date cannot be in the past"
+            )
+
+        elif end_date < start_date:
+
+            print(
+                "End date cannot be before start date"
+            )
+
+        else:
+
+            break
+
+    while True:
 
         delivery_date = read_date(
             "Enter delivery date (DD/MM/YYYY): "
         )
 
-        pickup_date = read_date(
-            "Enter pickup date (DD/MM/YYYY): "
-        )
+        if delivery_date < today:
 
-        today = datetime.now().replace(
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0
-        )
-
-        if (
-            start_date < today or
-            end_date < today or
-            delivery_date < today or
-            pickup_date < today
-            ):
-
-            print("Booking dates cannot be in the past")
-
-        elif end_date < start_date:
-
-            print("End date cannot be before start date")
+            print(
+                "Delivery date cannot be in the past"
+            )
 
         elif delivery_date > start_date:
 
             print(
                 "Delivery date must be before or on start date"
+            )
+
+        else:
+
+            break
+
+    while True:
+
+        pickup_date = read_date(
+            "Enter pickup date (DD/MM/YYYY): "
+        )
+
+        if pickup_date < today:
+
+            print(
+                "Pickup date cannot be in the past"
             )
 
         elif pickup_date < end_date:
@@ -149,17 +184,26 @@ def read_booking_dates():
 
         else:
 
-            return (
-                start_date,
-                end_date,
-                delivery_date,
-                pickup_date
-            )
+            break
 
-def dates_overlap(start1, end1, start2, end2):
+    return (
+        start_date,
+        end_date,
+        delivery_date,
+        pickup_date
+    )
 
-    return start1 <= end2 and start2 <= end1
+def dates_overlap(
+    start1,
+    end1,
+    start2,
+    end2
+):
 
+    return (
+        start1 <= end2
+        and start2 <= end1
+    )
 
 def check_availability(
     item_id,
@@ -233,6 +277,62 @@ def check_availability(
     available_quantity = total_quantity - booked_quantity
 
     return requested_quantity <= available_quantity
+
+def get_available_quantity(
+    item_id,
+    start_date,
+    end_date
+):
+
+    bookings = load_data(FILE_NAME)
+
+    inventory_items = load_data(
+        INVENTORY_FILE
+    )
+
+    total_quantity = 0
+
+    for item in inventory_items:
+
+        if item["id"] == item_id:
+
+            total_quantity = item["quantity"]
+
+            break
+
+    booked_quantity = 0
+
+    for booking in bookings:
+
+        booking_start = datetime.strptime(
+            booking["delivery_date"],
+            "%d/%m/%Y"
+        )
+
+        booking_end = datetime.strptime(
+            booking["pickup_date"],
+            "%d/%m/%Y"
+        )
+
+        if dates_overlap(
+            start_date,
+            end_date,
+            booking_start,
+            booking_end
+        ):
+
+            for booked_item in booking["items"]:
+
+                if booked_item["item_id"] == item_id:
+
+                    booked_quantity += (
+                        booked_item["quantity"]
+                    )
+
+    return (
+        total_quantity -
+        booked_quantity
+    )
 
 def validate_booking_items(items):
 
@@ -331,7 +431,7 @@ def assign_tracked_equipment(
         "unit_id": assigned_unit,
         "assigned_at": datetime.now().strftime("%d/%m/%Y %H:%M"),
         "released_at": None,
-        "status": "ACTIVE"
+        "status": "RESERVED"
     })
 
     save_data(
@@ -353,7 +453,7 @@ def unassign_tracked_equipment(booking_id):
                 datetime.now().strftime("%d/%m/%Y %H:%M")
             )
 
-            item["status"] = "RELEASED"
+            item["status"] = "AVAILABLE"
 
             found = True
 
@@ -398,9 +498,14 @@ def get_available_unit(
 
     for tracked in tracked_items:
 
-        if tracked.get("status") != "ACTIVE":
-
-            continue
+        if tracked.get("status") in ["RESERVED",
+                                     "OUT_FOR_DELIVERY",
+                                     "AT_EVENT",
+                                     "RETURNING"]:
+            
+            used_units.append(
+                tracked["unit_id"]
+            )
 
         for booking in bookings:
 
@@ -487,22 +592,44 @@ def create_booking():
 
     while True:
 
-        event_address = input("Enter event address: ").strip()
+        event_address = input(
 
+            "Enter event address: "
+
+            ).strip()
+        
         if event_address == "":
 
-            print("Event address cannot be empty")
+            print(
+
+                "Event address cannot be empty"
+
+            )
+
+        elif not any(
+
+                char.isalpha()
+
+                for char in event_address
+
+                ):
+            
+            print(
+
+                "Address must contain at least one letter"
+
+            )
 
         else:
-
+            
             break
-
+        
     (
-    start_date,
-    end_date,
-    delivery_date,
-    pickup_date
-) = read_booking_dates()
+        start_date,
+        end_date,
+        delivery_date,
+        pickup_date
+    ) = read_booking_dates()
 
     rental_days = (end_date - start_date).days + 1
 
@@ -516,12 +643,20 @@ def create_booking():
 
         for item in inventory_items:
 
+            available_quantity = (
+                get_available_quantity(
+                    item["id"],
+                    delivery_date,
+                    pickup_date
+                )
+            )
+
             print(
                 item["id"],
                 "-",
                 item["name"],
-                "(Stock:",
-                item["quantity"],
+                "(Available:",
+                available_quantity,
                 ")"
             )
 
@@ -548,13 +683,9 @@ def create_booking():
         if selected_item.get("tracked", False):
 
             assigned_unit = get_available_unit(
-
                 selected_item["id"],
-
                 delivery_date,
-
                 pickup_date
-
             )
 
             if assigned_unit is None:
@@ -575,16 +706,20 @@ def create_booking():
 
                     continue
 
-                if not check_availability(
-                    selected_item["id"],
-                    quantity,
-                    delivery_date,
-                    pickup_date
-                ):
+                available_quantity = (
+                    get_available_quantity(
+                        selected_item["id"],
+                        delivery_date,
+                        pickup_date
+                    )
+                )
+
+                if quantity > available_quantity:
 
                     print(
-                        "Required quantity is not available "
-                        "for the selected dates"
+                        "Only",
+                        available_quantity,
+                        "items available for selected dates"
                     )
 
                     continue
@@ -609,6 +744,9 @@ def create_booking():
             "item_id": selected_item["id"],
             "item_name": selected_item["name"],
             "quantity": quantity,
+            "returned_quantity": 0,
+            "damaged_quantity": 0,
+            "missing_quantity": 0,
             "assigned_unit": assigned_unit,
             "rent_per_day": str(rent_per_day),
             "days": rental_days,
@@ -617,7 +755,9 @@ def create_booking():
 
         while True:
 
-            choice = input("Add another item? (y/n): ").strip().lower()
+            choice = input(
+                "Add another item? (y/n): "
+            ).strip().lower()
 
             if choice in ["y", "n"]:
 
@@ -627,19 +767,17 @@ def create_booking():
 
         if choice == "n":
 
-                break
+            break
 
     if not booking_items:
 
         print("At least one item must be added")
 
         return
-    
+
     if not validate_booking_items(
-
         booking_items
-
-        ):
+    ):
 
         return
 
@@ -647,7 +785,9 @@ def create_booking():
 
     for item in booking_items:
 
-        total_amount += Decimal(item["item_total"])
+        total_amount += Decimal(
+            item["item_total"]
+        )
 
     while True:
 
@@ -659,7 +799,9 @@ def create_booking():
 
             if deposit_amount < 0:
 
-                print("Deposit cannot be negative")
+                print(
+                    "Deposit cannot be negative"
+                )
 
             elif deposit_amount > total_amount:
 
@@ -675,15 +817,17 @@ def create_booking():
 
             print("Enter a valid amount")
 
-    balance_amount = total_amount - deposit_amount
+    balance_amount = (
+        total_amount - deposit_amount
+    )
 
     pressure_score, pressure_level = (
-    calculate_pressure_score(
-        booking_items,
-        delivery_date,
-        pickup_date
+        calculate_pressure_score(
+            booking_items,
+            delivery_date,
+            pickup_date
+        )
     )
-)
 
     booking = {
         "id": generate_booking_id(bookings),
@@ -699,7 +843,9 @@ def create_booking():
         "items": booking_items,
         "total_amount": str(total_amount),
         "deposit_amount": str(deposit_amount),
-        "pressure_score": pressure_score
+        "balance_paid": "0",
+        "pressure_score": pressure_score,
+        "dispatch_status": "PENDING"
     }
 
     bookings.append(booking)
@@ -709,26 +855,36 @@ def create_booking():
         for inventory_item in inventory_items:
 
             if (
-
                 inventory_item["id"] == item["item_id"]
-
-                and inventory_item.get("tracked", False)
-
-                ):
+                and inventory_item.get(
+                    "tracked",
+                    False
+                )
+            ):
 
                 assign_tracked_equipment(
-
                     item["item_id"],
-
                     booking["id"],
-
                     item.get("assigned_unit")
-
                 )
 
     save_data(FILE_NAME, bookings)
 
     print("Booking created successfully")
+    
+    while True:
+        choice = input(
+            "Create another booking? (y/n): "
+            ).strip().lower()
+        
+        if choice == "y":
+            create_booking()
+            return
+        
+        elif choice == "n":
+            return
+        else:
+            print("Please enter only y or n")
 
 
 def view_bookings():
@@ -779,10 +935,22 @@ def view_bookings():
         print("Rental Days:", booking.get("rental_days", 0))
         print("Total Amount:", booking.get("total_amount", 0))
         print("Deposit Amount:", booking.get("deposit_amount", 0))
+        
+        balance_paid = Decimal(
+            booking.get(
+                "balance_paid",
+                "0"
+            )
+        )
+
         balance_amount = (
             Decimal(booking["total_amount"]) -
-            Decimal(booking["deposit_amount"]))
-        print("Balance Amount:", balance_amount)
+            Decimal(booking["deposit_amount"]) -
+            balance_paid
+        )
+
+        print("Balance Paid:", balance_paid)
+        print("Remaining Balance:", balance_amount)
         print("Items:")
         pressure_score = booking.get("pressure_score", 0)
         if pressure_score < 50:
@@ -894,7 +1062,7 @@ def view_tracked_equipment():
 
                 print(
                     "Status:",
-                    tracked.get("status", "ACTIVE")
+                    tracked.get("status", "RESERVED")
                 )
 
                 print(
