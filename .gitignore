@@ -1,3 +1,8 @@
 __pycache__/
 *.pyc
+
+# Runtime data
 data/*.json
+
+# Generated reports
+reports/*.txt
