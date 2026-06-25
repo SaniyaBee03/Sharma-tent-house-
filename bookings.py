@@ -12,6 +12,10 @@ OVERLAP_WEIGHT = 20
 
 LOW_PRESSURE_LIMIT = 50
 MEDIUM_PRESSURE_LIMIT = 100
+STATUS_RESERVED = "RESERVED"
+STATUS_OUT_FOR_DELIVERY = "OUT_FOR_DELIVERY"
+STATUS_RETURNING = "RETURNING"
+STATUS_AVAILABLE = "AVAILABLE"
 
 def generate_booking_id(bookings):
 
@@ -251,6 +255,13 @@ def check_availability(
 
     for booking in bookings:
 
+        if (
+            "delivery_date" not in booking
+            or
+            "pickup_date" not in booking
+            ):
+            continue
+
         booking_start = datetime.strptime(
             booking["delivery_date"],
             "%d/%m/%Y"
@@ -304,6 +315,13 @@ def get_available_quantity(
 
     for booking in bookings:
 
+        if (
+            "delivery_date" not in booking
+            or
+            "pickup_date" not in booking
+            ):
+            continue
+
         booking_start = datetime.strptime(
             booking["delivery_date"],
             "%d/%m/%Y"
@@ -343,15 +361,19 @@ def validate_booking_items(items):
         "item_total"
     ]
 
-    for item in items:
+    for index, item in enumerate(items, start=1):
 
         for field in required_fields:
 
             if field not in item:
 
                 print(
-                    f"Invalid booking item. "
+                    f"Invalid booking item {index}. "
                     f"Missing field: {field}"
+                )
+
+                print(
+                    f"Item data: {item}"
                 )
 
                 return False
@@ -377,6 +399,13 @@ def calculate_pressure_score(
     overlap_count = 0
 
     for booking in bookings:
+
+        if (
+            "delivery_date" not in booking
+            or
+            "pickup_date" not in booking
+            ):
+            continue
 
         booking_delivery = datetime.strptime(
             booking["delivery_date"],
@@ -431,7 +460,7 @@ def assign_tracked_equipment(
         "unit_id": assigned_unit,
         "assigned_at": datetime.now().strftime("%d/%m/%Y %H:%M"),
         "released_at": None,
-        "status": "RESERVED"
+        "status": STATUS_RESERVED
     })
 
     save_data(
@@ -453,7 +482,7 @@ def unassign_tracked_equipment(booking_id):
                 datetime.now().strftime("%d/%m/%Y %H:%M")
             )
 
-            item["status"] = "AVAILABLE"
+            item["status"] = STATUS_AVAILABLE
 
             found = True
 
@@ -498,18 +527,16 @@ def get_available_unit(
 
     for tracked in tracked_items:
 
-        if tracked.get("status") in ["RESERVED",
-                                     "OUT_FOR_DELIVERY",
-                                     "AT_EVENT",
-                                     "RETURNING"]:
-            
-            used_units.append(
-                tracked["unit_id"]
-            )
-
         for booking in bookings:
 
             if booking["id"] == tracked["booking_id"]:
+
+                if (
+                    "delivery_date" not in booking
+                    or
+                    "pickup_date" not in booking
+                    ):
+                    continue
 
                 booking_delivery = datetime.strptime(
                     booking["delivery_date"],
@@ -521,11 +548,14 @@ def get_available_unit(
                     "%d/%m/%Y"
                 )
 
-                if dates_overlap(
+                if (
+                    tracked["item_id"] == item_id
+                    and dates_overlap(
                     delivery_date,
                     pickup_date,
                     booking_delivery,
                     booking_pickup
+                    )
                 ):
 
                     used_units.append(
@@ -871,20 +901,8 @@ def create_booking():
     save_data(FILE_NAME, bookings)
 
     print("Booking created successfully")
-    
-    while True:
-        choice = input(
-            "Create another booking? (y/n): "
-            ).strip().lower()
-        
-        if choice == "y":
-            create_booking()
-            return
-        
-        elif choice == "n":
-            return
-        else:
-            print("Please enter only y or n")
+
+    return
 
 
 def view_bookings():
@@ -942,6 +960,9 @@ def view_bookings():
                 "0"
             )
         )
+
+# Remaining balance =
+# Total Amount - Deposit Amount - Additional Balance Paid
 
         balance_amount = (
             Decimal(booking["total_amount"]) -
@@ -1062,7 +1083,7 @@ def view_tracked_equipment():
 
                 print(
                     "Status:",
-                    tracked.get("status", "RESERVED")
+                    tracked.get("status", STATUS_RESERVED)
                 )
 
                 print(
