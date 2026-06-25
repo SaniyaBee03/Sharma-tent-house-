@@ -1,75 +1,42 @@
-# Phase 3 Design Decisions
+# Phase 4 – Delivery, Return and Damage Handling
 
-## Booking IDs
+### Implemented Features
 
-Booking IDs follow the format:
+* Dispatch bookings based on today's delivery schedule.
+* The dispatch section only shows bookings whose delivery date is today.
+* Process complete, partial, and pending returns.
+* The process return section only shows dispatched bookings because only dispatched bookings can be returned.
+* Record returned, damaged, and missing quantities for each booking item.
+* Repair damaged items and automatically update inventory availability.
+* Recover missing items and automatically restore them to inventory.
+* Update booking return records when damaged items are repaired or missing items are recovered.
+* Repaired and recovered items are counted as returned and added back to available inventory.
+* Monitor pending damaged and missing items that still require action.
 
-BOOK_001
-BOOK_002
-BOOK_003
+### Result
 
-If malformed IDs such as BOOK_ABC are found, the system ignores them during ID generation and displays a warning while viewing bookings.
+This phase completes the inventory movement workflow from dispatch to return while ensuring damaged and missing items are properly tracked and resolved.
 
-## Pressure Score
+# Phase 5 – Payments, Reports and Final Improvements
 
-Pressure Score is stored when a booking is created.
+### Implemented Features
 
-The value acts as a historical snapshot and is not recalculated later. This ensures reports show the operational pressure that existed at booking creation time.
+* Record booking deposits and balance payments.
+* Track remaining balances and update payment status within bookings.
+* Generate reports for:
 
-Pressure Score Formula:
+  * Active bookings
+  * Inventory out
+  * Customer history
+  * Damaged items
+  * Missing items
+  * Today's deliveries
+  * Today's pickups
+* Save all generated reports in the `reports/` folder.
+* Improve usability with better menus, clearer prompts, list-based selections, and improved error messages.
+* Refine the overall workflow to make daily operations faster and easier to manage.
 
-Pressure Score =
-Total Quantity +
-(Item Count × 10) +
-(Overlapping Bookings × 20)
+### Result
 
-Pressure Levels:
-
-- LOW (< 50)
-- MEDIUM (< 100)
-- HIGH (>= 100)
-
-## Tracked Equipment
-
-Tracked equipment uses individual unit identifiers.
-
-Example:
-
-LED WALL
-- LED001
-- LED002
-
-Each unit can be assigned independently to different bookings.
-
-Assignment records store:
-
-- item_id
-- booking_id
-- unit_id
-
-Item names are resolved from inventory data when displayed to avoid stale duplicate data.
-
-## Data Validation
-
-The system validates:
-
-- Inventory records
-- Customer records
-- Booking records
-- Booking item records
-- Quantity values
-- Date ranges
-- Deposit amounts
-
-Invalid records generate warnings and are not processed.
-
-## Future Enhancements
-
-Future phases may include:
-
-- Booking cancellation workflow
-- Equipment release workflow
-- Assignment history
-- Utilization reporting
-- Booking editing
-- Dynamic pressure analytics
+This phase completes the system by adding payment management, reporting, and usability improvements, creating a smooth workflow from booking creation to final payment and inventory return.
+=======

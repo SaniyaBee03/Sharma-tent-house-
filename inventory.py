@@ -1,5 +1,20 @@
 from storage import load_data, save_data
 
+def read_yes_no(message):
+
+    while True:
+
+        choice = input(
+            message
+        ).strip().lower()
+
+        if choice in ["y", "n"]:
+
+            return choice
+
+        print(
+            "Please enter only y or n"
+        )
 
 def read_positive_int(message):
 
@@ -38,7 +53,7 @@ def generate_id(items):
 
         if len(parts) != 2:
 
-            print("Warning: Invalid booking ID format: {booking_id}")
+            print(f"Warning: Invalid item ID format: {item_id}")
 
             continue
 
@@ -48,7 +63,7 @@ def generate_id(items):
 
         except ValueError:
 
-            print("Warning: Invalid booking ID found: {booking_id}")
+            print(f"Warning: Invalid item ID found: {item_id}")
 
             continue
 
@@ -59,6 +74,7 @@ def generate_id(items):
     new_id = max_id + 1
 
     return "ITEM_" + str(new_id).zfill(3)
+
 
 def validate_inventory_data(items):
 
@@ -92,107 +108,169 @@ def validate_inventory_data(items):
 
             if quantity <= 0:
 
-                print(f"Warning: Invalid quantity "f"in item {item['id']}")
+                print(
+                    f"Warning: Invalid quantity "
+                    f"in item {item['id']}"
+                )
 
                 return False
-            
+
             if rent_per_day <= 0:
 
-                print(f"Warning: Invalid rent per day "f"in item {item['id']}")
+                print(
+                    f"Warning: Invalid rent per day "
+                    f"in item {item['id']}"
+                )
 
                 return False
-            
+
         except (ValueError, TypeError):
-            
-            print(f"Warning: Invalid numeric values "f"in item {item['id']}")
+
+            print(
+                f"Warning: Invalid numeric values "
+                f"in item {item['id']}"
+            )
 
             return False
 
     return True
 
+
 def add_item():
 
-    items = load_data("data/inventory.json")
-
     while True:
 
-        item_name = input("Enter item name: ").strip()
+        items = load_data("data/inventory.json")
 
-        if item_name == "":
+        while True:
 
-            print("Item name cannot be empty")
+            item_name = input(
+                "Enter item name: "
+            ).strip()
 
-        else:
+            if item_name == "":
 
-            break
+                print(
+                    "Item name cannot be empty"
+                )
 
-    normalized_name = " ".join(item_name.lower().split())
+            else:
 
-    for item in items:
+                break
 
-        existing_name = " ".join(item["name"].lower().split())
+        normalized_name = " ".join(
+            item_name.lower().split()
+        )
 
-        if existing_name == normalized_name:
+        duplicate_found = False
 
-            print("Item already exists")
+        for item in items:
 
-            return
+            existing_name = " ".join(
+                item["name"].lower().split()
+            )
 
-    while True:
+            if existing_name == normalized_name:
 
-        category = input("Enter category: ").strip()
+                print("Item already exists")
 
-        if category == "":
+                duplicate_found = True
 
-            print("Category cannot be empty")
+                break
 
-        else:
-
-            break
-
-    quantity = read_positive_int("Enter quantity: ")
-
-    rent_per_day = read_positive_int("Enter rent per day: ")
-
-    while True:
-
-        tracked = input("Is this tracked equipment? (y/n): ").strip().lower()
-
-        if tracked not in ["y", "n"]:
-
-            print("Please enter only y or n")
+        if duplicate_found:
 
             continue
 
-        break
+        while True:
 
-    item = {
-        "id": generate_id(items),
-        "name": item_name,
-        "category": category,
-        "quantity": quantity,
-        "rent_per_day": rent_per_day,
-        "tracked": tracked == "y"
-    }
+            category = input(
+                "Enter category: "
+            ).strip()
 
-    if tracked == "y":
+            if category == "":
 
-        units = []
+                print(
+                    "Category cannot be empty"
+                )
 
-        prefix = item_name[:3].upper()
+            else:
 
-        for number in range(1, quantity + 1):
+                break
 
-            units.append(prefix + str(number).zfill(3))
+        quantity = read_positive_int(
+            "Enter quantity: "
+        )
+
+        rent_per_day = read_positive_int(
+            "Enter rent per day: "
+        )
+
+        while True:
+
+            tracked = input(
+                "Is this tracked equipment? (y/n): "
+            ).strip().lower()
+
+            if tracked not in ["y", "n"]:
+
+                print(
+                    "Please enter only y or n"
+                )
+
+                continue
+
+            break
+
+        item = {
+
+            "id": generate_id(items),
+
+            "name": item_name,
+
+            "category": category,
+
+            "quantity": quantity,
+
+            "rent_per_day": rent_per_day,
+
+            "tracked": tracked == "y"
+        }
+
+        if tracked == "y":
+
+            units = []
+
+            prefix = item["id"].replace("_", "")
+
+            for number in range(
+                1,
+                quantity + 1
+            ):
+
+                units.append(
+                    prefix
+                    + str(number).zfill(3)
+                )
 
             item["units"] = units
 
-    items.append(item)
+        items.append(item)
 
-    save_data("data/inventory.json", items)
+        save_data(
+            "data/inventory.json",
+            items
+        )
 
-    print("Item added successfully")
+        print(
+            "Item added successfully"
+        )
 
+        another = read_yes_no(
+            "\nAdd another item? (y/n): "
+        )
+        if another == "n":
+            return
 
 def view_items():
 
@@ -217,9 +295,13 @@ def view_items():
         print("Category:", item["category"])
         print("Quantity:", item.get("quantity", 0))
         print("Rent Per Day:", item.get("rent_per_day", 0))
-        print("Tracked Equipment:","Yes" if item.get("tracked", False)else "No")
+        print(
+            "Tracked Equipment:",
+            "Yes" if item.get("tracked", False) else "No"
+        )
 
         if item.get("tracked", False):
+
             tracked_items = load_data(
                 "data/tracked_equipment.json"
             )
@@ -232,7 +314,7 @@ def view_items():
                     tracked["item_id"] == item["id"]
                     and tracked.get("status") == "ACTIVE"
                 ):
-                    
+
                     assigned = True
                     break
 
@@ -243,100 +325,182 @@ def view_items():
 
 def update_item():
 
-    items = load_data("data/inventory.json")
+    while True:
 
-    if not validate_inventory_data(items):
+        items = load_data("data/inventory.json")
 
-        print("Inventory data validation failed")
+        if not validate_inventory_data(items):
 
-        return
+            print("Inventory data validation failed")
 
-    item_name = input("Enter item name: ").strip()
+            return
 
-    found = False
+        item_name = input(
+            "Enter item name: "
+        ).strip()
 
-    normalized_name = " ".join(
+        found = False
 
-    item_name.lower().split()
-
-)
-
-    for item in items:
-
-        existing_name = " ".join(
-
-            item["name"].lower().split()
-
+        normalized_name = " ".join(
+            item_name.lower().split()
         )
 
-        if existing_name == normalized_name:
+        for item in items:
 
-            new_quantity = read_positive_int("Enter new quantity: ")
+            existing_name = " ".join(
+                item["name"].lower().split()
+            )
 
-            if item.get("tracked", False):
+            if existing_name == normalized_name:
 
-                from storage import load_data
+                new_quantity = read_positive_int(
+                    "Enter new quantity: "
+                )
 
-                tracked_items = load_data("data/tracked_equipment.json")
+                if item.get(
+                    "tracked",
+                    False
+                ):
 
-                assigned_units = 0
+                    tracked_items = load_data(
+                        "data/tracked_equipment.json"
+                    )
 
-                for tracked in tracked_items:
+                    assigned_units = 0
 
-                    if tracked["item_id"] == item["id"]:
+                    for tracked in tracked_items:
 
-                        assigned_units += 1
+                        if (
+                            tracked["item_id"]
+                            == item["id"]
+                            and tracked.get("status") in [
+                                "RESERVED",
+                                "OUT_FOR_DELIVERY",
+                                "RETURNING"
+                            ]
+                        ):
 
-                        if new_quantity < assigned_units:
+                            assigned_units += 1
 
-                            print("Quantity cannot be less than "f"assigned units ({assigned_units})")
+                    if (
+                        new_quantity
+                        < assigned_units
+                    ):
 
-                            return
+                        print(
+                            f"Quantity cannot be less than "
+                            f"assigned units ({assigned_units})"
+                        )
 
-            item["quantity"] = new_quantity
+                        return
 
-            found = True
+                item["quantity"] = (
+                    new_quantity
+                )
 
-            break
+                found = True
 
-    if found:
+                break
 
-        save_data("data/inventory.json", items)
+        if found:
 
-        print("Quantity updated")
+            save_data(
+                "data/inventory.json",
+                items
+            )
 
-    else:
+            print(
+                "Quantity updated"
+            )
 
-        print("Item not found")
+        else:
 
+            print("Item not found")
+
+        another = read_yes_no(
+            "\nUpdate another item? (y/n): "
+        )
+        if another == "n":
+            return
 
 def search_item():
 
-    items = load_data("data/inventory.json")
+    while True:
 
-    if not validate_inventory_data(items):
+        items = load_data(
+            "data/inventory.json"
+        )
 
-        print("Inventory data validation failed")
+        if not validate_inventory_data(items):
 
-        return
+            print(
+                "Inventory data validation failed"
+            )
 
-    search_name = input("Enter item name: ").strip()
+            return
 
-    found = False
+        search_name = input(
+            "Enter item name: "
+        ).strip()
 
-    for item in items:
+        found = False
 
-        if search_name.lower() in item["name"].lower():
+        for item in items:
 
-            print("\nID:", item["id"])
-            print("Name:", item["name"])
-            print("Category:", item["category"])
-            print("Quantity:", item.get("quantity", 0))
-            print("Rent Per Day:", item.get("rent_per_day", 0))
-            print("Tracked Equipment:","Yes" if item.get("tracked", False) else "No")
+            if (
+                search_name.lower()
+                in item["name"].lower()
+            ):
 
-            found = True
+                print(
+                    "\nID:",
+                    item["id"]
+                )
 
-    if not found:
+                print(
+                    "Name:",
+                    item["name"]
+                )
 
-        print("Item not found")
+                print(
+                    "Category:",
+                    item["category"]
+                )
+
+                print(
+                    "Quantity:",
+                    item.get(
+                        "quantity",
+                        0
+                    )
+                )
+
+                print(
+                    "Rent Per Day:",
+                    item.get(
+                        "rent_per_day",
+                        0
+                    )
+                )
+
+                print(
+                    "Tracked Equipment:",
+                    "Yes"
+                    if item.get(
+                        "tracked",
+                        False
+                    )
+                    else "No"
+                )
+
+                found = True
+
+        if not found:
+
+            print("Item not found")
+
+        another = read_yes_no(
+            "\nSearch another item? (y/n): "
+        )
+        if another == "n":
+            return
