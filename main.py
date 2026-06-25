@@ -67,7 +67,18 @@ def booking_menu():
         choice = input("Enter choice: ")
 
         if choice == "1":
-            bookings.create_booking()
+            while True:
+                bookings.create_booking()
+                again = input(
+                    "Create another booking? (y/n): "
+                    ).strip().lower()
+                if again == "y":
+                    continue
+                elif again == "n":
+                    break
+                else:
+                    print("Please enter only y or n")
+                    break
         elif choice == "2":
             bookings.view_bookings()
         elif choice == "3":
@@ -145,7 +156,7 @@ def reports_menu():
         elif choice == "4":
             reports.missing_items_report()
         elif choice == "5":
-            name = input("Enter customer name: ")
+            name = input("Enter customer name: ").strip()
             reports.customer_history(name)
         elif choice == "6":
             reports.view_todays_deliveries_report()
