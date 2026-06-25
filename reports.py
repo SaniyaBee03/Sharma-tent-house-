@@ -388,8 +388,7 @@ def customer_history(customer_name):
     for booking in bookings:
 
         if (
-            customer_name.lower()
-            in booking["customer_name"].lower()
+            customer_name.strip().lower() == booking["customer_name"].strip().lower()
         ):
 
             found = True
@@ -528,12 +527,10 @@ def view_todays_deliveries_report():
         print("No deliveries scheduled for today")
         report_lines.append("\nNo deliveries scheduled for today")
 
-    file_path = "reports/todays_deliveries_report.txt"
-
-    with open(file_path, "w") as file:
-        file.write("\n".join(report_lines))
-
-    print("\nReport saved to", file_path)
+    save_report(
+        "reports/todays_deliveries_report.txt",
+        report_lines
+    )
 
 def view_todays_pickups_report():
 
@@ -577,9 +574,7 @@ def view_todays_pickups_report():
         print("No pickups scheduled for today")
         report_lines.append("\nNo pickups scheduled for today")
 
-    file_path = "reports/todays_pickups_report.txt"
-
-    with open(file_path, "w") as file:
-        file.write("\n".join(report_lines))
-
-    print("\nReport saved to", file_path)
+    save_report(
+        "reports/todays_pickups_report.txt",
+        report_lines
+    )
