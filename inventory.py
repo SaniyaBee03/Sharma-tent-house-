@@ -1,5 +1,20 @@
 from storage import load_data, save_data
 
+def read_yes_no(message):
+
+    while True:
+
+        choice = input(
+            message
+        ).strip().lower()
+
+        if choice in ["y", "n"]:
+
+            return choice
+
+        print(
+            "Please enter only y or n"
+        )
 
 def read_positive_int(message):
 
@@ -226,7 +241,7 @@ def add_item():
 
             units = []
 
-            prefix = item_name[:3].upper()
+            prefix = item["id"].replace("_", "")
 
             for number in range(
                 1,
@@ -251,25 +266,11 @@ def add_item():
             "Item added successfully"
         )
 
-        while True:
-
-            another = input(
-                "\nAdd another item? (y/n): "
-            ).strip().lower()
-
-            if another == "y":
-
-                break
-
-            elif another == "n":
-
-                return
-
-            else:
-
-                print(
-                    "Please enter only y or n"
-                )
+        another = read_yes_no(
+            "\nAdd another item? (y/n): "
+        )
+        if another == "n":
+            return
 
 def view_items():
 
@@ -372,6 +373,11 @@ def update_item():
                         if (
                             tracked["item_id"]
                             == item["id"]
+                            and tracked.get("status") in [
+                                "RESERVED",
+                                "OUT_FOR_DELIVERY",
+                                "RETURNING"
+                            ]
                         ):
 
                             assigned_units += 1
@@ -411,25 +417,11 @@ def update_item():
 
             print("Item not found")
 
-        while True:
-
-            another = input(
-                "\nUpdate another item? (y/n): "
-            ).strip().lower()
-
-            if another == "y":
-
-                break
-
-            elif another == "n":
-
-                return
-
-            else:
-
-                print(
-                    "Please enter only y or n"
-                )
+        another = read_yes_no(
+            "\nUpdate another item? (y/n): "
+        )
+        if another == "n":
+            return
 
 def search_item():
 
@@ -507,22 +499,8 @@ def search_item():
 
             print("Item not found")
 
-        while True:
-
-            another = input(
-                "\nSearch another item? (y/n): "
-            ).strip().lower()
-
-            if another == "y":
-
-                break
-
-            elif another == "n":
-
-                return
-
-            else:
-
-                print(
-                    "Please enter only y or n"
-                )
+        another = read_yes_no(
+            "\nSearch another item? (y/n): "
+        )
+        if another == "n":
+            return
