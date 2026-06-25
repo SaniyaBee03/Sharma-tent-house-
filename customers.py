@@ -2,6 +2,17 @@ from storage import load_data, save_data
 
 FILE_NAME = "data/customers.json"
 
+def read_yes_no(message):
+
+    while True:
+
+        choice = input(message).strip().lower()
+
+        if choice in ["y", "n"]:
+
+            return choice
+
+        print("Please enter only y or n")
 
 def generate_customer_id(customers):
 
@@ -30,9 +41,9 @@ def generate_customer_id(customers):
 
 def add_customer():
 
-    while True:
+    customers = load_data(FILE_NAME)
 
-        customers = load_data(FILE_NAME)
+    while True:
 
         while True:
 
@@ -145,25 +156,13 @@ def add_customer():
             "Customer added successfully"
         )
 
-        while True:
+        another = read_yes_no(
+            "\nAdd another customer? (y/n): "
+        )
 
-            another = input(
-                "\nAdd another customer? (y/n): "
-            ).strip().lower()
+        if another == "n":
 
-            if another == "y":
-
-                break
-
-            elif another == "n":
-
-                return
-
-            else:
-
-                print(
-                    "Please enter only y or n"
-                )
+            return
 
 
 def view_customers():
@@ -234,25 +233,11 @@ def search_customer():
                 "Customer not found"
             )
 
-        while True:
-
-            another = input(
-                "\nSearch another customer? (y/n): "
-            ).strip().lower()
-
-            if another == "y":
-
-                break
-
-            elif another == "n":
-
-                return
-
-            else:
-
-                print(
-                    "Please enter only y or n"
-                )
+        another = read_yes_no(
+            "\nSearch another customer? (y/n): "
+        )
+        if another == "n":
+            return
 
 
 def update_customer():
@@ -416,22 +401,8 @@ def update_customer():
                 "Customer not found"
             )
 
-        while True:
-
-            another = input(
-                "\nUpdate another customer? (y/n): "
-            ).strip().lower()
-
-            if another == "y":
-
-                break
-
-            elif another == "n":
-
-                return
-
-            else:
-
-                print(
-                    "Please enter only y or n"
-                )
+        another = read_yes_no(
+            "\nUpdate another customer? (y/n): "
+        )
+        if another == "n":
+            return
