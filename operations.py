@@ -7,6 +7,24 @@ MISSING_FILE = "data/missing_items.json"
 TRACKED_FILE = "data/tracked_equipment.json"
 BOOKINGS_FILE = "data/bookings.json"
 
+STATUS_OUT_FOR_DELIVERY = "OUT_FOR_DELIVERY"
+
+def read_yes_no(message):
+
+    while True:
+
+        choice = input(
+            message
+        ).strip().lower()
+
+        if choice in ["y", "n"]:
+
+            return choice
+
+        print(
+            "Please enter only y or n"
+        )
+
 def dispatch_booking():
 
     while True:
@@ -74,6 +92,18 @@ def dispatch_booking():
 
             continue
 
+        if (
+            selected_booking.get(
+                "dispatch_status"
+            ) == "DISPATCHED"
+        ):
+
+            print(
+                "This booking has already been dispatched"
+            )
+
+            continue
+
         selected_booking["dispatch_status"] = "DISPATCHED"
 
         save_data(
@@ -87,9 +117,7 @@ def dispatch_booking():
 
             if item["booking_id"] == booking_id:
 
-                item["status"] = (
-                    "OUT_FOR_DELIVERY"
-                )
+                item["status"] = STATUS_OUT_FOR_DELIVERY
 
                 tracked_found = True
 
@@ -104,25 +132,11 @@ def dispatch_booking():
             "Booking dispatched successfully"
         )
 
-        while True:
-
-            choice = input(
-                "Dispatch another booking? (y/n): "
-            ).strip().lower()
-
-            if choice == "y":
-
-                break
-
-            elif choice == "n":
-
-                return
-
-            else:
-
-                print(
-                    "Please enter only y or n"
-                )
+        choice = read_yes_no(
+            "Dispatch another booking? (y/n): "
+        )
+        if choice == "n":
+            return
 
 def process_return():
 
@@ -464,25 +478,11 @@ def process_return():
             "\nReturn processing completed"
         )
 
-        while True:
-
-            another = input(
-                "\nProcess another return? (y/n): "
-            ).strip().lower()
-
-            if another == "y":
-
-                break
-
-            elif another == "n":
-
-                return
-
-            else:
-
-                print(
-                    "Please enter only y or n"
-                )
+        another = read_yes_no(
+            "\nProcess another return? (y/n): "
+        )
+        if another == "n":
+            return
 
 def complete_repair():
 
@@ -819,25 +819,11 @@ def complete_repair():
             repaired_quantity
         )
 
-        while True:
-
-            choice = input(
-                "\nRepair another item? (y/n): "
-            ).strip().lower()
-
-            if choice == "y":
-
-                break
-
-            elif choice == "n":
-
-                return
-
-            else:
-
-                print(
-                    "Please enter only y or n"
-                )
+        another = read_yes_no(
+            "\nRepair another item? (y/n): "
+        )
+        if another == "n":
+            return
 
 def recover_missing_item():
 
@@ -1104,29 +1090,11 @@ def recover_missing_item():
             recovered_quantity
         )
 
-        while True:
-
-            another = input(
-                "\nRecover another item? (y/n): "
-            ).strip().lower()
-
-            if another == "y":
-
-                break
-
-            elif another == "n":
-
-                print(
-                    "Recovery process completed"
-                )
-
-                return
-
-            else:
-
-                print(
-                    "Please enter only y or n"
-                )
+        another = read_yes_no(
+            "\nRecover another item? (y/n): "
+        )
+        if another == "n":
+            return
 
 def view_return_status():
 
